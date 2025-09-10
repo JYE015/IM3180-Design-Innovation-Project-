@@ -10,12 +10,12 @@ import {
   Image,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { supabase } from './lib/supabase';
+import { supabase } from '../lib/supabase';
 
 //React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import UserProfile from './screens/UserProfile';
+import UserProfile from './UserProfile';
 
 const Stack = createNativeStackNavigator();
 
