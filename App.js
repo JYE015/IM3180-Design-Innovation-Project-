@@ -277,7 +277,7 @@ function LoginScreen({ navigation }) {
     >
       {/* Hall Image */}
       <Image
-        // source={require('./assets/hall5logo.jpg')}
+        source={require('./assets/hall5logo.jpg')}
         style={styles.hallImage}
       />
 
