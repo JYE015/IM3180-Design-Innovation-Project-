@@ -15,7 +15,7 @@ import { supabase } from '../lib/supabase';
 // ✅ NEW: React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import UserProfile from './UserProfile';
+import UserProfile from './screens/UserProfile';
 
 const Stack = createNativeStackNavigator();
 
