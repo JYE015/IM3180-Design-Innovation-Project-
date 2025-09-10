@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
 import {
+  Alert,
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
-  View,
   TextInput,
   TouchableOpacity,
-  Alert,
-  ScrollView,
-  Image,
+  View,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
-import { supabase } from '../lib/supabase';
+import { supabase } from './lib/supabase';
 
-//React Navigation
+// ✅ NEW: React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import UserProfile from './UserProfile';
+import UserProfile from './screens/UserProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +24,7 @@ function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Admin credentials 
+  // Admin credentials (⚠️ do not ship hardcoded secrets in production)
   const ADMIN_EMAIL = "ntuhall5admin@dipgirlies.com";
   const ADMIN_PASSWORD = "848526";
 
@@ -277,7 +277,7 @@ function LoginScreen({ navigation }) {
     >
       {/* Hall Image */}
       <Image
-        source={require('./assets/hall5logo.jpg')}
+        // source={require('./assets/hall5logo.jpg')}
         style={styles.hallImage}
       />
 

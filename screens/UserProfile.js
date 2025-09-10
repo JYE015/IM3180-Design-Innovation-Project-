@@ -1,19 +1,26 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  View, Text, TextInput, TouchableOpacity, 
-  Alert, StyleSheet, ActivityIndicator, 
-  KeyboardAvoidingView, Platform, ScrollView 
+import * as ImagePicker from 'expo-image-picker';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  KeyboardAvoidingView, Platform, ScrollView,
+  StyleSheet,
+  Text, TextInput, TouchableOpacity,
+  View
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 
 export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [school, setSchool] = useState('');
   const [course, setCourse] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -33,7 +40,7 @@ export default function UserProfile() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('username, school, course')
+        .select('username, school, course, avatar_url')
         .eq('id', user.id)
         .single();
 
@@ -43,6 +50,7 @@ export default function UserProfile() {
         setUsername(data.username ?? '');
         setSchool(data.school ?? '');
         setCourse(data.course ?? '');
+        setAvatarUrl(data.avatar_url ?? '');
       } else {
         // Create a profile row if missing
         const { error: insertErr } = await supabase.from('profiles').insert({
@@ -51,6 +59,7 @@ export default function UserProfile() {
           username: '',
           school: '',
           course: '',
+          avatar_url: ''
         });
         if (insertErr) throw insertErr;
       }
@@ -85,6 +94,7 @@ export default function UserProfile() {
           username: username.trim(),
           school: school.trim(),
           course: course.trim(),
+          // avatar_url already updated by upload handler
         },
         { onConflict: 'id' }
       );
@@ -96,6 +106,81 @@ export default function UserProfile() {
       Alert.alert('Save Error', err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const pickAndUploadImage = async () => {
+    try {
+      // Ask permission
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Please allow photo library access to upload an avatar.');
+        return;
+      }
+
+      // Pick image
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],   // square crop
+        quality: 0.9,
+      });
+
+      if (result.canceled) return;
+
+      setUploading(true);
+
+      // Current user
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
+      const user = sessionData.session?.user;
+      if (!user) {
+        Alert.alert('Not logged in', 'Please log in first.');
+        setUploading(false);
+        return;
+      }
+
+      // Convert local file URI -> Blob
+      const localUri = result.assets[0].uri;
+      const ext = localUri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}.${ext}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const res = await fetch(localUri);
+      const blob = await res.blob();
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, blob, {
+          contentType: blob.type || `image/${ext}`,
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get a public URL
+      const { data: publicData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+
+      // Save to profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      Alert.alert('Success', 'Profile photo updated!');
+    } catch (err) {
+      console.log('avatar upload error:', err);
+      Alert.alert('Upload Error', err.message);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -117,13 +202,35 @@ export default function UserProfile() {
         <Text style={styles.title}>My Profile</Text>
 
         <View style={styles.card}>
+
+          {/* Avatar row */}
+          <View style={styles.avatarRow}>
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center' }]}>
+                <Text style={{ color: '#888', fontSize: 12 }}>No photo</Text>
+              </View>
+            )}
+            <TouchableOpacity
+              style={[styles.smallBtn, uploading && { opacity: 0.6 }]}
+              onPress={pickAndUploadImage}
+              disabled={uploading}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.smallBtnText}>
+                {uploading ? 'Uploading…' : 'Upload new photo'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <Text style={styles.label}>Email (read-only)</Text>
           <TextInput style={[styles.input, styles.disabled]} value={email} editable={false} />
 
           <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. DIP_girlie"
+            placeholder="e.g. claudia_iem"
             value={username}
             onChangeText={setUsername}
             autoCapitalize="none"
@@ -168,6 +275,30 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#eee',
+  },
+  smallBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#4E8EF7',
+    borderRadius: 8,
+  },
+  smallBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+
   label: { fontSize: 14, color: '#555', marginTop: 12, marginBottom: 6, fontWeight: '600' },
   input: {
     height: 50,
