@@ -16,6 +16,8 @@ import { supabase } from './lib/supabase';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import UserProfile from './screens/UserProfile';
+import EventHome from './screens/EventHome';  // <— add this
+import EventPage from './components/EventPage';  // Import the EventPage component
 
 const Stack = createNativeStackNavigator();
 
@@ -157,8 +159,8 @@ function LoginScreen({ navigation }) {
           Alert.alert("Welcome Admin!", "You have successfully logged in as Hall 5 Admin.");
           setEmail("");
           setPassword("");
-          // Navigate to profile anyway (or another admin screen if you make one)
-          navigation.navigate('UserProfile', { from: 'admin' });
+          // Redirect admin to EventHome screen
+          navigation.navigate('EventHome');
           return true;
         } else {
           Alert.alert("Access Denied", "Invalid admin credentials.");
@@ -259,7 +261,7 @@ function LoginScreen({ navigation }) {
       Alert.alert("Welcome!", `Successfully logged in as ${profile.role}!`);
       setEmail("");
       setPassword("");
-      navigation.navigate('UserProfile', { role: profile.role });
+      navigation.navigate('EventHome');
       return true;
 
     } catch (error) {
@@ -394,6 +396,16 @@ export default function App() {
           name="UserProfile"
           component={UserProfile}
           options={{ title: 'My Profile' }}
+        />
+        <Stack.Screen
+          name="EventHome"
+          component={EventHome}
+          options={{ title: 'Events' }}
+        />
+        <Stack.Screen
+          name="EventPage"
+          component={EventPage}
+          options={{ title: 'Event Details' }}
         />
       </Stack.Navigator>
     </NavigationContainer>
