@@ -12,14 +12,58 @@ import {
 } from 'react-native';
 import { supabase } from './lib/supabase';
 
-// ✅ NEW: React Navigation
+// React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import UserProfile from './screens/UserProfile';
-import EventHome from './screens/EventHome';  // <— add this
-import EventPage from './components/EventPage';  // Import the EventPage component
+import EventHome from './screens/EventHome';
+import EventPage from './components/EventPage';
+
+// Import icons (you may need to install expo vector icons if not already)
+import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+
+// Bottom Tab Navigator for main app screens
+function MainTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+
+          if (route.name === 'Events') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Profile') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#4E8EF7',
+        tabBarInactiveTintColor: 'gray',
+        tabBarStyle: {
+          paddingBottom: 5,
+          height: 60,
+        },
+        headerShown: false, // We'll handle headers in individual screens
+      })}
+    >
+      <Tab.Screen 
+        name="Events" 
+        component={EventHome} 
+        options={{ title: 'Events' }}
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={UserProfile} 
+        options={{ title: 'Profile' }}
+      />
+    </Tab.Navigator>
+  );
+}
 
 function LoginScreen({ navigation }) {
   const [role, setRole] = useState("User");
@@ -143,7 +187,6 @@ function LoginScreen({ navigation }) {
   };
 
   // ---------------- LOGIN FUNCTION ----------------
-  // Returns true on success so we can navigate
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password");
@@ -159,8 +202,8 @@ function LoginScreen({ navigation }) {
           Alert.alert("Welcome Admin!", "You have successfully logged in as Hall 5 Admin.");
           setEmail("");
           setPassword("");
-          // Redirect admin to EventHome screen
-          navigation.navigate('EventHome');
+          // Navigate to main tabs (Events tab will be default)
+          navigation.navigate('MainTabs');
           return true;
         } else {
           Alert.alert("Access Denied", "Invalid admin credentials.");
@@ -250,7 +293,7 @@ function LoginScreen({ navigation }) {
                 Alert.alert("Welcome!", `Successfully logged in as ${profile.role}!`);
                 setEmail("");
                 setPassword("");
-                navigation.navigate('UserProfile', { role: profile.role });
+                navigation.navigate('MainTabs');
               }
             }
           ]
@@ -261,7 +304,7 @@ function LoginScreen({ navigation }) {
       Alert.alert("Welcome!", `Successfully logged in as ${profile.role}!`);
       setEmail("");
       setPassword("");
-      navigation.navigate('EventHome');
+      navigation.navigate('MainTabs');
       return true;
 
     } catch (error) {
@@ -393,14 +436,9 @@ export default function App() {
           options={{ title: 'Hall 5 Login' }}
         />
         <Stack.Screen
-          name="UserProfile"
-          component={UserProfile}
-          options={{ title: 'My Profile' }}
-        />
-        <Stack.Screen
-          name="EventHome"
-          component={EventHome}
-          options={{ title: 'Events' }}
+          name="MainTabs"
+          component={MainTabs}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="EventPage"

@@ -9,8 +9,9 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-navigation/bottom-tabs": "^7.3.10",
+    "@react-navigation/bottom-tabs": "^7.4.7",
     "@react-navigation/native": "^7.1.1",
     "@react-navigation/native-stack": "^7.1.1",
     "@supabase/supabase-js": "^2.39.0",
@@ -27,8 +28,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
-    "@types/react": "~19.0.10",
-    "typescript": "~5.8.3"
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
   },
   "private": true
 }
