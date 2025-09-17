@@ -19,6 +19,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import UserProfile from './screens/UserProfile';
 import EventHome from './screens/EventHome';
 import EventPage from './components/EventPage';
+import CreateEvent from './screens/CreateEvent';
 
 // Import icons (you may need to install expo vector icons if not already)
 import { Ionicons } from '@expo/vector-icons';
@@ -203,7 +204,7 @@ function LoginScreen({ navigation }) {
           setEmail("");
           setPassword("");
           // Navigate to main tabs (Events tab will be default)
-          navigation.navigate('MainTabs');
+          navigation.navigate('AdminPage');
           return true;
         } else {
           Alert.alert("Access Denied", "Invalid admin credentials.");
@@ -443,6 +444,11 @@ export default function App() {
         <Stack.Screen
           name="EventPage"
           component={EventPage}
+          options={{ title: 'Event Details' }}
+        />
+        <Stack.Screen
+          name="AdminPage"
+          component={CreateEvent}
           options={{ title: 'Event Details' }}
         />
       </Stack.Navigator>
