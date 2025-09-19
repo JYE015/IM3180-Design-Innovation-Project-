@@ -30,10 +30,10 @@ export default function EventListItem({ event }: EventListItemProps) {
             <Text style={[styles.text, styles.title]}>{event.title}</Text>
             <Text style={[styles.text, styles.details]}>
               {dayjs(event.date).isValid()
-                ? `${dayjs(event.date).format('ddd, D MMM')} · ${event.time ?? ''}`
+                ? `${dayjs(event.date).format('ddd, D MMM YYYY')} · ${event.time}`
                 : 'Date TBA'}
             </Text>
-            <Text style={[styles.text, styles.location]}>Location:{event.location}</Text>
+            <Text style={[styles.text, styles.location]}>Location: {event.location}</Text>
             {!!event.image_uri && (
               <View style={[styles.image]}>
                 <Image
@@ -42,18 +42,17 @@ export default function EventListItem({ event }: EventListItemProps) {
                 />
               </View>
             )}
-            <Text style={[styles.text, styles.details]}>Deadline: {event.deadline}</Text>
+            <Text style={[styles.text, styles.details]}>Deadline: 
+              {dayjs(event.deadline).isValid()
+                ? `${dayjs(event.deadline).format('ddd, D MMM YYYY')}`
+                : 'Date TBA'}
+            </Text>
             {!!event.tags && (
               <Text style={[styles.text, styles.details]}>Tags: {event.tags}</Text>
             )}
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={styles.footer}>
-          <AntDesign name="sharealt" size={20} color="gray" />
-          <AntDesign name="save" size={20} color="gray" />
-        </View>
   {/* Removed leftover Link closing tag */}
     </TouchableOpacity>
   );

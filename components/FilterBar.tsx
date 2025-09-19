@@ -1,7 +1,7 @@
 // components/FilterBar.tsx
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-const OPTIONS = ['All', 'Upcoming', 'Past', 'Online', 'In-person'] as const;
+const OPTIONS = ['All', 'My Events', 'Upcoming', 'Past', 'Online', 'In-person'] as const;
 export type FilterOption = typeof OPTIONS[number];
 
 export default function FilterBar({
