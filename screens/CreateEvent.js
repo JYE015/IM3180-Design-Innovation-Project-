@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import * as ImagePicker from 'expo-image-picker';
 import {
   View,
   Text,
@@ -16,7 +17,7 @@ export default function CreateEvent() {
     event_title: "",
     date: "",
     time: "",
-    image_url: "",
+    image_uri: "",
     details: "",
     registration_deadline: "",
     tags: "",
@@ -25,6 +26,7 @@ export default function CreateEvent() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Handling Input Changes
   const handleInputChange = (field, value) => {
@@ -34,11 +36,123 @@ export default function CreateEvent() {
     }));
   };
 
-  // Validating Image Url
-  const isValidUrl = (url) => {
-    return url.match(/\.(jpeg|jpg|gif|png|webp|svg)$/i);
+  // Image Uploader
+  const pickImage = async () => {
+    try {
+      // Request permission to access media library
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+        return;
+      }
+
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [16, 9], // You can adjust this ratio
+        quality: 0.8, // Compress image to reduce file size
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        handleInputChange("image_uri", result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
   };
 
+  // Taking Photo from Image
+  const takePhoto = async () => {
+    try {
+      // Request permission to access camera
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+        return;
+      }
+
+      // Launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [16, 9],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        handleInputChange("image_uri", result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    }
+  };
+
+  // Showing Image Options
+  const showImageOptions = () => {
+    Alert.alert(
+      'Select Image',
+      'Choose how you want to add an image',
+      [
+        { text: 'Camera', onPress: takePhoto },
+        { text: 'Gallery', onPress: pickImage },
+        { text: 'Remove Image', onPress: () => handleInputChange("image_uri", ""), style: 'destructive' },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  // Send Image to Supabase Storage
+  const uploadImageToSupabase = async (imageUri) => {
+    if (!imageUri) return null;
+
+    try {
+      setUploadingImage(true);
+
+      const fileExt = imageUri.split('.').pop().toLowerCase();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      // Convert file URI → ArrayBuffer
+      const response = await fetch(imageUri);
+      const arrayBuffer = await response.arrayBuffer();
+
+      // Upload as ArrayBuffer
+      const { error: uploadError } = await supabase.storage
+        .from("event-images")
+        .upload(fileName, arrayBuffer, {
+          contentType: `image/${fileExt}`,
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("event-images")
+        .getPublicUrl(fileName);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Update preview to hosted URL
+      setEventData((prev) => ({
+        ...prev,
+        image_uri: publicUrl,
+      }));
+
+      return publicUrl;
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      Alert.alert("Error", "Failed to upload image. Please try again.");
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
   // Handling Form Submission to Supabase
   const handleSubmit = async () => {
     // Basic Validation
@@ -68,13 +182,36 @@ export default function CreateEvent() {
     setIsLoading(true);
 
     try {
+      let imageUrl = null;
+      if (eventData.image_uri) {
+        imageUrl = await uploadImageToSupabase(eventData.image_uri);
+        if (!imageUrl) {
+          // If image upload failed, ask user if they want to continue without image
+          const shouldContinue = await new Promise((resolve) => {
+            Alert.alert(
+              'Image Upload Failed',
+              'Would you like to create the event without an image?',
+              [
+                { text: 'Cancel', onPress: () => resolve(false) },
+                { text: 'Continue', onPress: () => resolve(true) },
+              ]
+            );
+          });
+          
+          if (!shouldContinue) {
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+
       const payload = {
         Title: eventData.event_title.trim(),
         Description: eventData.details.trim(),
         Date: eventData.date ? eventData.date : null,
         Time: eventData.time ? eventData.time : null,
         Location: eventData.location ? eventData.location : null,
-        image_url: eventData.image_url ? eventData.image_url : null,
+        image_url: imageUrl,
         Deadline: eventData.registration_deadline ? eventData.registration_deadline : null,
         Tags: eventData.tags ? eventData.tags : null,
         MaximumParticipants: eventData.maximum ? parseInt(eventData.maximum, 10) : null,
@@ -111,6 +248,8 @@ export default function CreateEvent() {
       setIsLoading(false);
     }
   };
+
+  // UI TEAM EDIT HERE ONWARDS 
 
   return (
     <ScrollView style={styles.container}>
@@ -163,30 +302,31 @@ export default function CreateEvent() {
         </View>
       </View>
 
-      {/* Image URL */}
+      {/* Image Upload */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Picture (Image URL)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="https://example.com/image.jpg"
-          value={eventData.image_url}
-          onChangeText={(value) => handleInputChange("image_url", value)}
-        />
-        {/* Preview image only if URL is valid */}
-        {eventData.image_url && isValidUrl(eventData.image_url) && (
+        <Text style={styles.label}>Event Picture</Text>
+        
+        <TouchableOpacity 
+          style={styles.imagePickerButton} 
+          onPress={showImageOptions}
+          disabled={uploadingImage}
+        >
+          <Text style={styles.imagePickerButtonText}>
+            {uploadingImage ? 'Uploading...' : eventData.image_uri ? 'Change Image' : 'Add Image'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Image Preview */}
+        {eventData.image_uri && (
           <View style={styles.imagePreview}>
             <Text style={styles.previewLabel}>Preview:</Text>
             <Image
-              source={{ uri: eventData.image_url }}
+              source={{ uri: eventData.image_uri }}
               style={styles.previewImage}
               onError={(error) => {
                 console.log("Image load error:", error);
               }}
-              onLoad={() => console.log("Image loaded successfully")}
             />
-            <Text style={styles.imageNote}>
-              If image doesn't show, the URL might not work on mobile
-            </Text>
           </View>
         )}
       </View>
@@ -243,7 +383,7 @@ export default function CreateEvent() {
       <TouchableOpacity
         style={[styles.submitButton, isLoading && styles.disabledButton]}
         onPress={handleSubmit}
-        disabled={isLoading}
+        disabled={isLoading || uploadingImage}
       >
         <Text style={styles.submitButtonText}>
           {isLoading ? "Publishing..." : "Publish Event"}
@@ -356,6 +496,18 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+  },
+  imagePickerButton: {
+  backgroundColor: "#2196F3",
+  padding: 12,
+  borderRadius: 6,
+  alignItems: "center",
+  marginBottom: 10,
+  },
+  imagePickerButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   bottomSpacer: {
     height: 30,

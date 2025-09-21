@@ -13,7 +13,7 @@ type Event = {
   time: string;       // from DB Time
   title: string;      // mapped from Title
   location: string;   // mapped from Location
-  image_uri: string;  // mapped from image_url
+  image_url: string;  // mapped from image_url
   deadline: string;   // mapped from Deadline
 };
 
@@ -63,7 +63,7 @@ export default function EventHome() {
       date: r.Date,            // keep as YYYY-MM-DD
       time: r.Time ?? null,    // keep raw DB time
       location: r.Location,
-      image_uri: r.image_url ?? '',
+      image_url: r.image_url ?? '',
       deadline: r.Deadline || '',  // Add deadline field
     }));
 

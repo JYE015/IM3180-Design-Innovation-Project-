@@ -10,7 +10,7 @@ type Event = {
   date: string;   // from DB Date
   time: string; // from DB Time
   deadline: string;
-  image_uri: string;
+  image_url: string;
   location: string; // Added location property
   tags?: string;
   maximumParticipants?: number;
@@ -34,13 +34,11 @@ export default function EventListItem({ event }: EventListItemProps) {
                 : 'Date TBA'}
             </Text>
             <Text style={[styles.text, styles.location]}>Location: {event.location}</Text>
-            {!!event.image_uri && (
-              <View style={[styles.image]}>
-                <Image
-                  source={{ uri: event.image_uri }}
-                  style={styles.image}
-                />
-              </View>
+            {!!event.image_url && (
+              <Image
+                source={{ uri: event.image_url }}
+                style={styles.image}
+              />
             )}
             <Text style={[styles.text, styles.details]}>Deadline: 
               {dayjs(event.deadline).isValid()
