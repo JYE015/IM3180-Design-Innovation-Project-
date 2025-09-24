@@ -72,8 +72,8 @@ function LoginScreen({ navigation }) {
   const [password, setPassword] = useState("");
 
   // Admin credentials (⚠️ do not ship hardcoded secrets in production)
-  const ADMIN_EMAIL = "ntuhall5admin@dipgirlies.com";
-  const ADMIN_PASSWORD = "848526";
+  const ADMIN_EMAIL = "admin@gmail.com";
+  const ADMIN_PASSWORD = "000000";
 
   // Test function to verify Supabase connection
   const testSupabase = async () => {
