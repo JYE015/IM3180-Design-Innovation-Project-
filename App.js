@@ -324,7 +324,7 @@ function LoginScreen({ navigation }) {
       {/* Hall Image */}
       <Image
         source={require('./assets/hubble_image.jpg')}
-        style={styles.hallImage}
+        style={styles.hubbleImage}
       />
 
       {/* Title */}
@@ -396,8 +396,8 @@ function LoginScreen({ navigation }) {
       {role === "Admin" && (
         <View style={styles.adminInfo}>
           <Text style={styles.adminInfoText}>Admin Login Info:</Text>
-          <Text style={styles.adminInfoText}>Email: ntuhall5admin@dipgirlies.com</Text>
-          <Text style={styles.adminInfoText}>Password: 848526</Text>
+          <Text style={styles.adminInfoText}>Email: admin@gmail.com</Text>
+          <Text style={styles.adminInfoText}>Password: 000000</Text>
         </View>
       )}
 
@@ -465,9 +465,9 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
-  hallImage: {
+  hubbleImage: {
     width: '100%',
-    height: 200,
+    height: 400,
     borderRadius: 12,
     marginBottom: 20,
     backgroundColor: '#e0e0e0',
