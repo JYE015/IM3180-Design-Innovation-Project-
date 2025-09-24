@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
@@ -23,6 +23,7 @@ export default function EventHome() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [myEventIds, setMyEventIds] = useState<number[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -106,10 +107,11 @@ export default function EventHome() {
         return;
       }
 
-      // Always set the event IDs, even if empty
-      const eventIds = data && data.length > 0 ? data.map(item => item.event) : [];
-      console.log('User registered events:', eventIds);
-      setMyEventIds(eventIds);
+      if (data && data.length > 0) {
+        const eventIds = data.map(item => item.event);
+        console.log('User registered events:', eventIds);
+        setMyEventIds(eventIds);
+      }
     } catch (error) {
       console.error('Error in fetchUserEvents:', error);
     }
@@ -132,33 +134,29 @@ export default function EventHome() {
   return (
     <>
       <SafeAreaView style={styles.container}>
-        <View style={{ paddingHorizontal: 16 }}>
+        <View style={{ paddingHorizontal: 16, gap: 12 }}>
+          <TextInput 
+            style={styles.searchInput}
+            placeholder='Search events...'
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
           <FilterBar value={filter} onChange={setFilter} />
         </View>
 
         {loading ? (
           <ActivityIndicator style={{ marginTop: 20 }} />
-        ) : events.length === 0 ? (
-          <View style={styles.messageContainer}>
-            <Text style={styles.messageText}>
-              {filter === 'My Events' 
-                ? 'No events registered'
-                : filter === 'Upcoming'
-                ? 'No upcoming events'
-                : filter === 'Past'
-                ? 'No past events'
-                : filter === 'Online'
-                ? 'No online events'
-                : filter === 'In-person'
-                ? 'No in-person events'
-                : 'No events found'}
-            </Text>
-          </View>
         ) : (
           <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-            {events.map(e => (
-              <EventListItem key={e.id} event={e} />
-            ))}
+            {events
+              .filter(event => 
+                searchQuery === '' || 
+                event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                event.location.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map(e => (
+                <EventListItem key={e.id} event={e} />
+              ))}
           </ScrollView>
         )}
       </SafeAreaView>
@@ -179,4 +177,12 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center'
   },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#fff'
+  }
 });
