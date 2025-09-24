@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +13,7 @@ import {
 import { supabase } from '../lib/supabase';
 
 export default function UserProfile() {
+  const navigation = useNavigation(); // Already imported
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -107,6 +109,38 @@ export default function UserProfile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  // ADD THIS NEW LOGOUT FUNCTION
+  const handleLogout = async () => {
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase.auth.signOut();
+              if (error) {
+                Alert.alert('Error', 'Failed to log out');
+                return;
+              }
+              // Navigate back to login screen and clear navigation stack
+              navigation.reset({
+                index: 0,
+                routes: [{ name: 'Login' }],
+              });
+            } catch (err) {
+              console.log('Logout error:', err);
+              Alert.alert('Error', 'Something went wrong during logout');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const pickAndUploadImage = async () => {
@@ -255,6 +289,15 @@ export default function UserProfile() {
           <TouchableOpacity style={styles.saveBtn} onPress={onSave} disabled={saving} activeOpacity={0.85}>
             {saving ? <ActivityIndicator /> : <Text style={styles.saveText}>Save Changes</Text>}
           </TouchableOpacity>
+
+          {/* ADD THIS LOGOUT BUTTON */}
+          <TouchableOpacity 
+            style={styles.logoutBtn} 
+            onPress={handleLogout} 
+            activeOpacity={0.85}
+          >
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -318,4 +361,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  
+  // ADD THESE NEW STYLES FOR LOGOUT BUTTON
+  logoutBtn: {
+    marginTop: 12,
+    height: 52,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 16 
+  },
 });
