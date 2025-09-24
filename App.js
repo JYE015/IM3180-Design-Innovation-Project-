@@ -323,17 +323,17 @@ function LoginScreen({ navigation }) {
     >
       {/* Hall Image */}
       <Image
-        source={require('./assets/hall5logo.jpg')}
+        source={require('./assets/hubble_image.jpg')}
         style={styles.hallImage}
       />
 
       {/* Title */}
-      <Text style={styles.title}>Hall 5 Login System</Text>
+      {/* <Text style={styles.title}>Hall 5 Login System</Text> */}
 
       {/* Test Supabase Button */}
-      <TouchableOpacity style={styles.testButton} onPress={testSupabase}>
+      {/* <TouchableOpacity style={styles.testButton} onPress={testSupabase}>
         <Text style={styles.testButtonText}>Test Supabase Connection</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       {/* Role Selection */}
       <View style={styles.newRoleContainer}>
@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     borderWidth: 3,
   },
   blueCircle: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#0055FF',
     borderColor: '#1E40AF',
   },
   redCircle: {
@@ -609,7 +609,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   loginButton: {
-    backgroundColor: '#4E8EF7',
+    backgroundColor: '#0055FF',
   },
   signupButton: {
     backgroundColor: '#10B981',

@@ -175,6 +175,7 @@ export default function UserProfile() {
     }
   };
 
+  // FIXED LOGOUT FUNCTION
   const handleLogout = async () => {
     Alert.alert(
       'Log Out',
@@ -191,10 +192,20 @@ export default function UserProfile() {
                 Alert.alert('Error', 'Failed to log out');
                 return;
               }
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
+              // Fixed navigation - navigate to root stack and reset to Login
+              const parentNavigator = navigation.getParent();
+              if (parentNavigator) {
+                parentNavigator.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              } else {
+                // Fallback if getParent() doesn't work
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Login' }],
+                });
+              }
             } catch (err) {
               console.log('Logout error:', err);
               Alert.alert('Error', 'Something went wrong during logout');
@@ -317,7 +328,7 @@ export default function UserProfile() {
           <Text style={styles.label}>Username</Text>
           <TextInput
             style={styles.input}
-            placeholder="e.g. claudia_iem"
+            placeholder="e.g. username"
             value={username}
             onChangeText={setUsername}
             autoCapitalize="none"
