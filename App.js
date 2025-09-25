@@ -20,6 +20,7 @@ import UserProfile from './screens/UserProfile';
 import EventHome from './screens/EventHome';
 import EventPage from './components/EventPage';
 import CreateEvent from './screens/CreateEvent';
+import Calendar from './screens/Calendar';
 
 // Import icons (you may need to install expo vector icons if not already)
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +36,9 @@ function MainTabs() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
 
-          if (route.name === 'Events') {
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Calendar') {  
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
@@ -53,10 +56,17 @@ function MainTabs() {
       })}
     >
       <Tab.Screen 
-        name="Events" 
+        name="Home" 
         component={EventHome} 
-        options={{ title: 'Events' }}
+        options={{ title: 'Home' }}
       />
+
+       <Tab.Screen                   
+        name="Calendar" 
+        component={Calendar}
+        options={{ title: 'Calendar' }}
+      />
+
       <Tab.Screen 
         name="Profile" 
         component={UserProfile} 
