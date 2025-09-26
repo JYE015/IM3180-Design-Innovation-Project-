@@ -265,12 +265,6 @@ export default function EventPage() {
               console.log('Attendance event type:', typeof attendance.event);
               console.log('Attendance user type:', typeof attendance.user);
               
-              // Force a hard reset of the UI state first
-              setAttendance(null);
-              setIsRegistered(false);
-              
-              // Try multiple approaches to delete the record
-              
               // Approach 1: Use the exact ID
               console.log('Trying approach 1: Delete by exact ID');
               const { error: deleteError1 } = await supabase
@@ -280,22 +274,7 @@ export default function EventPage() {
                 
               // 3. We've already updated the UI state at the start of the function
               console.log('UI state already updated to show cancellation');
-              
-              // 4. Update the local event state immediately too
-              if (event && event.CurrentParticipants) {
-                const updatedEvent = {
-                  ...event,
-                  CurrentParticipants: Math.max(0, event.CurrentParticipants - 1)
-                };
-                setEvent(updatedEvent);
-              }
-              
-              // Force a timeout before re-checking attendance to ensure DB has time to update
-              setTimeout(() => {
-                console.log('Refreshing data after timeout');
-                fetchOne();
-              }, 1000);
-              
+            
               Alert.alert('Success', 'Your registration has been canceled.');
             } catch (error) {
               console.error('Error canceling registration:', error);
@@ -309,6 +288,11 @@ export default function EventPage() {
       { cancelable: true }
     );
   };
+
+const isDeadlinePassed = useCallback(() => {
+  if (!event?.Deadline) return false;
+  return dayjs(event.Deadline).isBefore(dayjs(), 'day');
+}, [event?.Deadline]);
 
   if (loading) {
     return (
@@ -335,7 +319,7 @@ export default function EventPage() {
             <Text style={[styles.text, styles.title]}>{event.Title}</Text>
             <Text style={[styles.text, styles.details]}>
               {dayjs(event.Date).isValid()
-                ? `${dayjs(event.Date).format('ddd, D MMM')} · ${event.Time || ''}`
+                ? `${dayjs(event.Date).format('ddd, D MMM YYYY')} · ${event.Time || ''}`
                 : 'Date TBA'}
             </Text>
             {!!event.Description && <Text style={[styles.text]}>{event.Description}</Text>}
@@ -376,6 +360,11 @@ export default function EventPage() {
             // Show "Event Full" button when the event is at capacity
             <View style={styles.fullButton}>
               <Text style={[styles.details, { fontSize: 17, color: 'white' }]}>Event Full :( </Text>
+            </View>
+          ) : isDeadlinePassed() ? (
+            // Show "Event Full" button when the event is at capacity
+            <View style={styles.fullButton}>
+              <Text style={[styles.details, { fontSize: 17, color: 'white' }]}>Closed</Text>
             </View>
           ) : (
             // Regular RSVP button

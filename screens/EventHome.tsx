@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import EventListItem from '../components/EventListItem';
 import FilterBar, { FilterOption } from '../components/FilterBar'
+import TinderView from '../components/TinderView';
 import { supabase } from '../lib/supabase';
 
 type Event = {
@@ -131,36 +132,42 @@ export default function EventHome() {
     }, [filter, myEventIds])
   );
 
-  return (
-    <>
-      <SafeAreaView style={styles.container}>
-        <View style={{ paddingHorizontal: 16, gap: 12 }}>
-          <TextInput 
-            style={styles.searchInput}
-            placeholder='Search events...'
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          <FilterBar value={filter} onChange={setFilter} />
-        </View>
+    return (
+    <SafeAreaView style={styles.container}>
+      <View style={{ paddingHorizontal: 16, gap: 12 }}>
+        <TextInput 
+          style={styles.searchInput}
+          placeholder='Search events...'
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <FilterBar value={filter} onChange={setFilter} />
+      </View>
 
-        {loading ? (
-          <ActivityIndicator style={{ marginTop: 20 }} />
-        ) : (
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-            {events
-              .filter(event => 
-                searchQuery === '' || 
-                event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                event.location.toLowerCase().includes(searchQuery.toLowerCase())
-              )
-              .map(e => (
-                <EventListItem key={e.id} event={e} />
-              ))}
-          </ScrollView>
-        )}
-      </SafeAreaView>
-    </>
+      {loading ? (
+        <ActivityIndicator style={{ marginTop: 20 }} />
+      ) : events.length === 0 ? (
+        <View style={styles.messageContainer}>
+          <Text style={styles.messageText}>
+            {filter === 'My Events' ? 'No events registered' : 'No events found'}
+          </Text>
+        </View>
+      ) : filter === 'All' ? (
+        <TinderView events={events} searchQuery={searchQuery} />
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
+          {events
+            .filter(event => 
+              searchQuery === '' || 
+              event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              event.location.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+            .map(e => (
+              <EventListItem key={e.id} event={e} />
+            ))}
+        </ScrollView>
+      )}
+    </SafeAreaView>
   );
 }
 

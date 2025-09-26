@@ -23,30 +23,30 @@ export default function Calendar() {
     {
       id: 1,
       title: "Hall Breakfast",
-      time: "0900 - 1000",
+      time: "09:00 - 10:00",
       date: new Date(),
-      timeSlot: "0900"
+      timeSlot: "09:00"
     },
     {
       id: 2,
       title: "Study Group",
-      time: "1400 - 1600",
+      time: "14:00 - 16:00",
       date: new Date(Date.now() + 86400000), // Tomorrow
-      timeSlot: "1400"
+      timeSlot: "14:00"
     },
     {
       id: 3,
       title: "Basketball Practice",
-      time: "1700 - 1900",
+      time: "17:00 - 19:00",
       date: new Date(Date.now() + 86400000), // Tomorrow
-      timeSlot: "1700"
+      timeSlot: "17:00"
     },
     {
       id: 4,
       title: "Movie Night",
-      time: "2000 - 2200",
+      time: "20:00 - 22:00",
       date: new Date(Date.now() + 172800000), // Day after tomorrow
-      timeSlot: "2000"
+      timeSlot: "20:00"
     }
   ]);
   
@@ -143,7 +143,7 @@ export default function Calendar() {
   // Get all time slots (9AM-3AM) with events for selected date
   const getTimeSlotData = () => {
     const selectedEvents = getEventsForSelectedDate();
-    const timeSlots = ['0900', '1000', '1100', '1200', '1300', '1400', '1500', '1600', '1700', '1800', '1900', '2000', '2100', '2200', '2300', '0000', '0100', '0200', '0300'];
+    const timeSlots = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
     
     //To map each time slots to the events
     return timeSlots.map(timeSlot => {

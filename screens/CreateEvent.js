@@ -271,7 +271,7 @@ export default function CreateEvent() {
 
       {/* Location */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Location</Text>
+        <Text style={styles.label}>Location *</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter event location"  
@@ -346,7 +346,7 @@ export default function CreateEvent() {
 
       {/* Registration Deadline */}
       <View style={styles.inputGroup}>
-        <Text style={styles.label}>Registration Deadline</Text>
+        <Text style={styles.label}>Registration Deadline *</Text>
         <TextInput
           style={styles.input}
           placeholder="YYYY-MM-DD"

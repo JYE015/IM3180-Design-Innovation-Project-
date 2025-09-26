@@ -19,11 +19,15 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import UserProfile from './screens/UserProfile';
 import EventHome from './screens/EventHome';
 import EventPage from './components/EventPage';
+import TinderView from './components/TinderView';
 import CreateEvent from './screens/CreateEvent';
 import Calendar from './screens/Calendar';
+import AdminHome from './screens/AdminHome';
+import AdminEventListItem from './components/AdminEventListItem';
 
 // Import icons (you may need to install expo vector icons if not already)
 import { Ionicons } from '@expo/vector-icons';
+import AdminEventPage from './components/AdminEventPage';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -214,7 +218,7 @@ function LoginScreen({ navigation }) {
           setEmail("");
           setPassword("");
           // Navigate to main tabs (Events tab will be default)
-          navigation.navigate('AdminPage');
+          navigation.navigate('AdminHome');
           return true;
         } else {
           Alert.alert("Access Denied", "Invalid admin credentials.");
@@ -460,6 +464,30 @@ export default function App() {
           name="AdminPage"
           component={CreateEvent}
           options={{ title: 'Event Details' }}
+          />
+          
+          <Stack.Screen
+          name="AdminHome"
+          component={AdminHome}
+          options={{ title: 'Admin Home' }}
+        />
+
+        <Stack.Screen
+          name="AdminEventListItem"
+          component={AdminEventListItem}
+          options={{ }}
+        />
+
+        <Stack.Screen
+          name="AdminEventPage"
+          component={AdminEventPage}
+          options={{ title: 'Event Tracking Details' }}
+        />
+
+         <Stack.Screen
+          name="TinderView"
+          component={TinderView}
+          options={{ title: 'Event Home' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

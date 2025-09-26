@@ -4,14 +4,15 @@ import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity, Image, StyleSheet, Text, View } from 'react-native';
 
 // Update the event type to match your new table
+//This page is for event list for the filtered events!
 type Event = {
- id: number;
+  id: number;
   title: string;
-  date: string;   // from DB Date
-  time: string; // from DB Time
+  date: string;
+  time: string;
   deadline: string;
   image_url: string;
-  location: string; // Added location property
+  location: string;
   tags?: string;
   maximumParticipants?: number;
   currentParticipants?: number;
@@ -21,10 +22,15 @@ type EventListItemProps = {
   event: Event;
 };
 
+//has both front and backend code here
+//anything with navigation don't change, anything with style need to change!
 export default function EventListItem({ event }: EventListItemProps) {
   const navigation = useNavigation();
+  
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('EventPage', { id: event.id })} style={styles.eventContainer}>
+    <TouchableOpacity 
+      onPress={() => navigation.navigate('EventPage', { id: event.id })} 
+      style={styles.eventContainer}>
         <View style={styles.contentContainer}>
           <View>
             <Text style={[styles.text, styles.title]}>{event.title}</Text>
@@ -34,24 +40,24 @@ export default function EventListItem({ event }: EventListItemProps) {
                 : 'Date TBA'}
             </Text>
             <Text style={[styles.text, styles.location]}>Location: {event.location}</Text>
-            {!!event.image_url && (
+            {event.image_url && (
               <Image
                 source={{ uri: event.image_url }}
                 style={styles.image}
               />
             )}
-            <Text style={[styles.text, styles.details]}>Deadline: 
+            <Text style={[styles.text, styles.details]}>
+              Deadline: {' '}
               {dayjs(event.deadline).isValid()
-                ? `${dayjs(event.deadline).format('ddd, D MMM YYYY')}`
+                ? dayjs(event.deadline).format('ddd, D MMM YYYY')
                 : 'Date TBA'}
             </Text>
-            {!!event.tags && (
+            {event.tags && (
               <Text style={[styles.text, styles.details]}>Tags: {event.tags}</Text>
             )}
+
           </View>
         </View>
-
-  {/* Removed leftover Link closing tag */}
     </TouchableOpacity>
   );
 }
@@ -59,18 +65,16 @@ export default function EventListItem({ event }: EventListItemProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16, // Adds spacing from edges
+    padding: 16,
     backgroundColor: '#fff',
   },
-
-    contentContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-  
-     eventContainer: {
+  contentContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  eventContainer: {
     backgroundColor: '#ffffff',
     borderRadius: 10,
     padding: 15,
@@ -82,7 +86,7 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5, // for Android shadow
+    elevation: 5,
   },
 
   text: {
