@@ -9,8 +9,48 @@ import {
   ScrollView,
   Alert,
   Image,
+  Modal
 } from "react-native";
-import { supabase } from "../lib/supabase"; // Adjust the path as necessary
+import { supabase } from "../lib/supabase";
+import { Calendar } from 'react-native-calendars';
+
+const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "Select Date" }) => {
+  const [selected, setSelected] = useState(selectedDate || '');
+
+  const handleDayPress = (day) => {
+    setSelected(day.dateString);
+  };
+
+  const handleConfirm = () => {
+    onDateSelect(selected);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
+      <View style={calendarStyles.modalOverlay}>
+        <View style={calendarStyles.calendarContainer}>
+          <Text style={calendarStyles.modalTitle}>{title}</Text>
+          <Calendar
+            onDayPress={handleDayPress}
+            markedDates={{
+              [selected]: { selected: true, selectedColor: '#4CAF50' }
+            }}
+            minDate={new Date().toISOString().split('T')[0]}
+          />
+          <View style={calendarStyles.buttonRow}>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.cancelButton]} onPress={onClose}>
+              <Text style={calendarStyles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.confirmButton]} onPress={handleConfirm}>
+              <Text style={calendarStyles.confirmButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 export default function CreateEvent() {
   const [eventData, setEventData] = useState({
@@ -28,6 +68,16 @@ export default function CreateEvent() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Handle date selection from calendar
+  const handleDateSelect = (date) => {
+      handleInputChange("date", date);
+  };
+
+  // Handle deadline selection from calendar
+  const handleDeadlineSelect = (date) => {
+      handleInputChange("registration_deadline", date);
+  };
+
   // Handling Input Changes
   const handleInputChange = (field, value) => {
     setEventData((prev) => ({
@@ -36,6 +86,10 @@ export default function CreateEvent() {
     }));
   };
 
+  // Calendar Modals
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showDeadlineCalendar, setShowDeadlineCalendar] = useState(false);
+  
   // Image Uploader
   const pickImage = async () => {
     try {
@@ -284,12 +338,14 @@ export default function CreateEvent() {
       <View style={styles.rowContainer}>
         <View style={[styles.inputGroup, styles.halfWidth]}>
           <Text style={styles.label}>Date *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={eventData.date}
-            onChangeText={(value) => handleInputChange("date", value)}
-          />
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowCalendar(true)}
+          >
+            <Text style={[styles.datePickerText, !eventData.date && styles.placeholderText]}>
+              {eventData.date || "Select Date"}
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={[styles.inputGroup, styles.halfWidth]}>
           <Text style={styles.label}>Time</Text>
@@ -347,12 +403,14 @@ export default function CreateEvent() {
       {/* Registration Deadline */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Registration Deadline *</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          value={eventData.registration_deadline}
-          onChangeText={(value) => handleInputChange("registration_deadline", value)}
-        />
+        <TouchableOpacity
+          style={styles.datePickerButton}
+          onPress={() => setShowDeadlineCalendar(true)}
+        >
+          <Text style={[styles.datePickerText, !eventData.registration_deadline && styles.placeholderText]}>
+            {eventData.registration_deadline || "Select Deadline"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tags */}
@@ -391,6 +449,23 @@ export default function CreateEvent() {
       </TouchableOpacity>
 
       <View style={styles.bottomSpacer} />
+
+      {/* Calendar Modals */}
+      <CalendarModal
+        visible={showCalendar}
+        selectedDate={eventData.date}
+        onDateSelect={handleDateSelect}
+        onClose={() => setShowCalendar(false)}
+        title="Select Event Date"
+      />
+
+      <CalendarModal
+        visible={showDeadlineCalendar}
+        selectedDate={eventData.registration_deadline}
+        onDateSelect={handleDeadlineSelect}
+        onClose={() => setShowDeadlineCalendar(false)}
+        title="Select Registration Deadline"
+      />
     </ScrollView>
   );
 }
@@ -511,5 +586,78 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 30,
+  },
+
+  datePickerButton: {
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 6,
+  padding: 12,
+  backgroundColor: "#fafafa",
+  justifyContent: "center",
+  },
+
+  datePickerText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  placeholderText: {
+    color: "#999",
+  },
+});
+
+const calendarStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 0.45,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#757575',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

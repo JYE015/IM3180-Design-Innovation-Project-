@@ -5,9 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import dayjs from 'dayjs';
 
+
 export default function AdminEventPage({ route, navigation }) {
   const { event } = route.params;
-  const [signups, setSignups] = useState([]);
+
+  console.log("event:", event);
+  console.log("event.id:", event?.id);
+
+  const [signups, setSignups] = useState({ CurrentParticipants: 0, MaximumParticipants: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,7 +54,11 @@ export default function AdminEventPage({ route, navigation }) {
 
         </TouchableOpacity>
         <Text style={styles.headerTitle}>TRACKER</Text>
-        <TouchableOpacity style={styles.editButton}>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={() => {console.log("event.id:", event?.id);
+          navigation.navigate('EditEvent', { eventId: event.id })}}
+        >
           <Ionicons name="create-outline" size={24} color="#000" />
         </TouchableOpacity>
       </View>

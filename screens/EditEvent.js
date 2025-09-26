@@ -9,13 +9,57 @@ import {
     ScrollView,
     Alert,
     Image,
-    ActivityIndicator
+    ActivityIndicator,
+    Modal
 } from "react-native";
 import {supabase} from "../lib/supabase";
+import { Calendar } from 'react-native-calendars';
+
+
+const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "Select Date" }) => {
+  const [selected, setSelected] = React.useState(selectedDate || '');
+
+  const handleDayPress = (day) => {
+    setSelected(day.dateString);
+  };
+
+  const handleConfirm = () => {
+    onDateSelect(selected);
+    onClose();
+  };
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
+      <View style={calendarStyles.modalOverlay}>
+        <View style={calendarStyles.calendarContainer}>
+          <Text style={calendarStyles.modalTitle}>{title}</Text>
+          <Calendar
+            onDayPress={handleDayPress}
+            markedDates={{
+              [selected]: { selected: true, selectedColor: '#4CAF50' }
+            }}
+            minDate={new Date().toISOString().split('T')[0]}
+          />
+          <View style={calendarStyles.buttonRow}>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.cancelButton]} onPress={onClose}>
+              <Text style={calendarStyles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.confirmButton]} onPress={handleConfirm}>
+              <Text style={calendarStyles.confirmButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 
 export default function EditEvent({ route, navigation }) {
     // Getting event ID from navigation params
     const { eventId } = route.params;
+    const [showCalendar, setShowCalendar] = React.useState(false);
+    const [showDeadlineCalendar, setShowDeadlineCalendar] = React.useState(false);
 
     const [eventData, setEventData] = React.useState({
         event_title:"",
@@ -35,16 +79,16 @@ export default function EditEvent({ route, navigation }) {
     const [originalImageUri, setOriginalImageUri] = React.useState("");
 
     // Fetching Existing Data
-useEffect(() => {
-    fetchEventData();
-}, [eventId]);
+    useEffect(() => {
+        fetchEventData();
+    }, [eventId]);
 
 const fetchEventData = async () => {
     try {
         setFetchingEvent(true);
 
         const { data, error } = await supabase
-            .from('events')
+            .from('Events')
             .select('*')
             .eq('id', eventId)
             .single();
@@ -61,16 +105,16 @@ const fetchEventData = async () => {
             setEventData({
                 event_title: data.Title || "",
                 date: data.Date || "",
-                time: data.Time || "",
-                image_uri: data.image_uri || "",
-                details: data.details || "",
+                time: data.Time ? data.Time.slice(0, 5) : "",
+                image_uri: data.image_url || "",
+                details: data.Description || "",
                 registration_deadline: data.Deadline || "",
-                tags: data.tags || "",
-                maximum: data.maximumParticipants ? data.maximumParticipants.toString() : "",
-                location: data.location || ""
+                tags: data.Tags || "",
+                maximum: data.MaximumParticipants ? data.MaximumParticipants.toString() : "",
+                location: data.Location || ""
             });
 
-            setOriginalImageUri(data.image_uri || "");
+            setOriginalImageUri(data.image_url || "");
           }
         } catch (error) {
             console.error("Unexpected error", error);
@@ -89,6 +133,16 @@ const fetchEventData = async () => {
         }));
     };
 
+    // Handle date selection from calendar
+    const handleDateSelect = (date) => {
+        handleInputChange("date", date);
+    };
+
+    // Handle deadline selection from calendar
+    const handleDeadlineSelect = (date) => {
+        handleInputChange("registration_deadline", date);
+    };
+    
     // Image Upload Function
     const pickImage = async () => {
         try {
@@ -222,11 +276,6 @@ const fetchEventData = async () => {
 
   // Handle form submission to update the event
   const handleUpdate = async () => {
-    // Basic Validation
-    if (!eventData.event_title || !eventData.date || !eventData.time || !eventData.details) {
-      Alert.alert("Error", "Please fill in all required fields.");
-      return;
-    }
 
     // Validate Maximum if provided
     if (eventData.maximum && (isNaN(eventData.maximum) || parseInt(eventData.maximum) <= 0)) {
@@ -252,14 +301,14 @@ const fetchEventData = async () => {
       let imageUrl = eventData.image_uri;
 
       // Check if image was changed
-      if (eventData.image_uri && eventData.image_uri !== originalImageUrl) {
+      if (eventData.image_uri && eventData.image_uri !== originalImageUri) {
         // Upload new image
         const newImageUrl = await uploadImageToSupabase(eventData.image_uri);
         if (newImageUrl) {
           imageUrl = newImageUrl;
           // Delete old image if it exists and was changed
-          if (originalImageUrl) {
-            await deleteOldImage(originalImageUrl);
+          if (originalImageUri) {
+            await deleteOldImage(originalImageUri);
           }
         } else {
           const shouldContinue = await new Promise((resolve) => {
@@ -278,29 +327,48 @@ const fetchEventData = async () => {
             return;
           }
           // Keep original image
-          imageUrl = originalImageUrl;
+          imageUrl = originalImageUri;
         }
       }
 
       // If image was removed (empty string), delete old image
-      if (!eventData.image_uri && originalImageUrl) {
-        await deleteOldImage(originalImageUrl);
+      if (!eventData.image_uri && originalImageUri) {
+        await deleteOldImage(originalImageUri);
         imageUrl = null;
       }
 
-      const payload = {
-        Title: eventData.event_title.trim(),
-        Description: eventData.details.trim(),
-        Date: eventData.date ? eventData.date : null,
-        Time: eventData.time ? eventData.time : null,
-        Location: eventData.location ? eventData.location : null,
-        image_url: imageUrl,
-        Deadline: eventData.registration_deadline ? eventData.registration_deadline : null,
-        Tags: eventData.tags ? eventData.tags : null,
-        MaximumParticipants: eventData.maximum ? parseInt(eventData.maximum, 10) : null,
-      };
+      const payload = {};
 
-      console.log("Updating event with payload:", payload);
+      if (eventData.event_title) {
+        payload.Title = eventData.event_title.trim();
+      }
+      if (eventData.details) {
+        payload.Description = eventData.details.trim();
+      }
+      if (eventData.date) {
+        payload.Date = eventData.date;
+      }
+      if (eventData.time) {
+        payload.Time = eventData.time;
+      }
+      if (eventData.location) {
+        payload.Location = eventData.location;
+      }
+      if (eventData.image_uri) {
+        payload.image_url = eventData.image_uri;
+      }
+      if (eventData.registration_deadline) {
+        payload.Deadline = eventData.registration_deadline;
+      }
+      if (eventData.tags) {
+        payload.Tags = eventData.tags;
+      }
+      if (eventData.maximum) {
+        payload.MaximumParticipants = parseInt(eventData.maximum, 10);
+      }
+
+
+    console.log("Updating event with payload:", payload);
 
       const { error } = await supabase
         .from("Events")
@@ -363,25 +431,26 @@ const fetchEventData = async () => {
       </View>
       
       {/* Date & Time Row */}
-      <View style={styles.rowContainer}>
-        <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={styles.label}>Date *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="YYYY-MM-DD"
-            value={eventData.date}
-            onChangeText={(value) => handleInputChange("date", value)}
-          />
-        </View>
-        <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={styles.label}>Time</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HH:MM (24hr)"
-            value={eventData.time}
-            onChangeText={(value) => handleInputChange("time", value)}
-          />
-        </View>
+      <View style={[styles.inputGroup, styles.halfWidth]}>
+        <Text style={styles.label}>Date *</Text>
+        <TouchableOpacity
+          style={styles.datePickerButton}
+          onPress={() => setShowCalendar(true)}
+        >
+          <Text style={[styles.datePickerText, !eventData.date && styles.placeholderText]}>
+            {eventData.date || "Select Date"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={[styles.inputGroup, styles.halfWidth]}>
+        <Text style={styles.label}>Time</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="HH:MM (24hr)"
+          value={eventData.time}
+          onChangeText={(value) => handleInputChange("time", value)}
+        />
       </View>
 
       {/* Image Upload */}
@@ -429,12 +498,14 @@ const fetchEventData = async () => {
       {/* Registration Deadline */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Registration Deadline</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          value={eventData.registration_deadline}
-          onChangeText={(value) => handleInputChange("registration_deadline", value)}
-        />
+        <TouchableOpacity
+          style={styles.datePickerButton}
+          onPress={() => setShowDeadlineCalendar(true)}
+        >
+          <Text style={[styles.datePickerText, !eventData.registration_deadline && styles.placeholderText]}>
+            {eventData.registration_deadline || "Select Deadline"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Tags */}
@@ -483,6 +554,22 @@ const fetchEventData = async () => {
       </View>
 
       <View style={styles.bottomSpacer} />
+      {/* Calendar Modals */}
+      <CalendarModal
+        visible={showCalendar}
+        selectedDate={eventData.date}
+        onDateSelect={handleDateSelect}
+        onClose={() => setShowCalendar(false)}
+        title="Select Event Date"
+      />
+
+      <CalendarModal
+        visible={showDeadlineCalendar}
+        selectedDate={eventData.registration_deadline}
+        onDateSelect={handleDeadlineSelect}
+        onClose={() => setShowDeadlineCalendar(false)}
+        title="Select Registration Deadline"
+      />
     </ScrollView>
   );
 }
@@ -634,7 +721,81 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  bottomSpacer: {
+   bottomSpacer: {
     height: 30,
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    padding: 12,
+    backgroundColor: "#fafafa",
+    justifyContent: "center",
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  placeholderText: {
+    color: "#999",
+  },
+});
+
+const calendarStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  calendarContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  calendarWrapper: {
+    alignItems: 'center',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  modalButton: {
+    flex: 0.45,
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#757575',
+  },
+  confirmButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

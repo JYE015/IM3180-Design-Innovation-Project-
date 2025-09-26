@@ -24,6 +24,7 @@ import CreateEvent from './screens/CreateEvent';
 import Calendar from './screens/Calendar';
 import AdminHome from './screens/AdminHome';
 import AdminEventListItem from './components/AdminEventListItem';
+import EditEvent from './screens/EditEvent';
 
 // Import icons (you may need to install expo vector icons if not already)
 import { Ionicons } from '@expo/vector-icons';
@@ -482,6 +483,12 @@ export default function App() {
           name="AdminEventPage"
           component={AdminEventPage}
           options={{ title: 'Event Tracking Details' }}
+        />
+
+        <Stack.Screen
+          name="EditEvent"
+          component={EditEvent}
+          options={{ title: 'Edit Event Page' }}
         />
 
          <Stack.Screen
