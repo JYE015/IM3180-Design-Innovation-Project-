@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState, useEffect } from 'react'; // Add useEffect here
+import { useState, useEffect } from 'react';
 import {
   Alert,
   Image,
@@ -19,6 +19,7 @@ import * as Font from 'expo-font';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
 import UserProfile from './screens/UserProfile';
 import EventHome from './screens/EventHome';
 import EventPage from './components/EventPage';
@@ -28,10 +29,13 @@ import Calendar from './screens/Calendar';
 import AdminHome from './screens/AdminHome';
 import AdminEventListItem from './components/AdminEventListItem';
 import EditEvent from './screens/EditEvent';
-
-// Import icons (you may need to install expo vector icons if not already)
-import { Ionicons } from '@expo/vector-icons';
 import AdminEventPage from './components/AdminEventPage';
+
+// ✅ NEW: Import Announcements
+import Announcements from './screens/Announcements';
+
+// Import icons
+import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -46,8 +50,10 @@ function MainTabs() {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Calendar') {  
+          } else if (route.name === 'Calendar') {
             iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'Announcements') {
+            iconName = focused ? 'mail' : 'mail-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
           }
@@ -63,21 +69,28 @@ function MainTabs() {
         headerShown: false, // We'll handle headers in individual screens
       })}
     >
-      <Tab.Screen 
-        name="Home" 
-        component={EventHome} 
+      <Tab.Screen
+        name="Home"
+        component={EventHome}
         options={{ title: 'Home' }}
       />
 
-       <Tab.Screen                   
-        name="Calendar" 
+      <Tab.Screen
+        name="Calendar"
         component={Calendar}
         options={{ title: 'Calendar' }}
       />
 
-      <Tab.Screen 
-        name="Profile" 
-        component={UserProfile} 
+      {/* ✅ NEW: Announcements Tab */}
+      <Tab.Screen
+        name="Announcements"
+        component={Announcements}
+        options={{ title: 'Inbox' }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={UserProfile}
         options={{ title: 'Profile' }}
       />
     </Tab.Navigator>
@@ -92,33 +105,6 @@ function LoginScreen({ navigation }) {
   // Admin credentials (⚠️ do not ship hardcoded secrets in production)
   const ADMIN_EMAIL = "admin@gmail.com";
   const ADMIN_PASSWORD = "000000";
-
-  // Test function to verify Supabase connection
-  const testSupabase = async () => {
-    try {
-      console.log('Testing Supabase connection...');
-      const { data, error } = await supabase.from('profiles').select('count');
-
-      if (error) {
-        console.log('Supabase error:', error);
-        Alert.alert('Supabase Error', `Error: ${error.message}\n\nCheck your API key!`);
-        return;
-      }
-
-      const { data: authData, error: authError } = await supabase.auth.getSession();
-      if (authError) {
-        console.log('Auth error:', authError);
-        Alert.alert('Auth Error', authError.message);
-        return;
-      }
-
-      Alert.alert('Success!', 'Supabase and Auth are connected properly!');
-      console.log('Supabase test successful');
-    } catch (err) {
-      console.log('Connection error:', err);
-      Alert.alert('Connection Error', `${err.message}\n\nCheck your supabase.js file`);
-    }
-  };
 
   // ---------------- SIGN UP FUNCTION ----------------
   const handleSignup = async () => {
@@ -143,14 +129,8 @@ function LoginScreen({ navigation }) {
         password: password,
       });
 
-      console.log('Signup result:', userData, signUpError);
-
       if (signUpError) {
-        console.log('Full signup error:', signUpError);
-        Alert.alert(
-          "Sign Up Error",
-          `Error: ${signUpError.message}\n\nTry:\n1. Different email (like test@gmail.com)\n2. Check Supabase email settings`
-        );
+        Alert.alert("Sign Up Error", signUpError.message);
         return;
       }
 
@@ -159,43 +139,13 @@ function LoginScreen({ navigation }) {
         return;
       }
 
-      console.log('User created, now creating profile...');
-
-      // Wait a moment for the auth session to be fully established
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userData.user.id,
-          role: 'User'
-        });
-
-      if (profileError) {
-        console.log('Profile creation error:', profileError);
-        console.log('Attempting alternative profile creation...');
-
-        const { error: altProfileError } = await supabase
-          .from('profiles')
-          .upsert(
-            { id: userData.user.id, role: 'User' },
-            { onConflict: 'id' }
-          );
-
-        if (altProfileError) {
-          Alert.alert(
-            "Profile Error",
-            `${profileError.message}\n\nPlease update your database RLS policies or disable RLS for testing.`
-          );
-          return;
-        }
-      }
-
-      Alert.alert(
-        "Success!",
-        "Account created successfully! Please check your email to verify your account."
+      // Create profile in DB
+      await supabase.from('profiles').upsert(
+        { id: userData.user.id, role: 'User' },
+        { onConflict: 'id' }
       );
 
+      Alert.alert("Success!", "Account created. Please verify your email.");
       setEmail("");
       setPassword("");
 
@@ -212,8 +162,6 @@ function LoginScreen({ navigation }) {
       return false;
     }
 
-    console.log('Attempting login with:', email, 'Role:', role);
-
     try {
       // Admin path
       if (role === "Admin") {
@@ -221,7 +169,6 @@ function LoginScreen({ navigation }) {
           Alert.alert("Welcome Admin!", "You have successfully logged in as Hall 5 Admin.");
           setEmail("");
           setPassword("");
-          // Navigate to main tabs (Events tab will be default)
           navigation.navigate('AdminHome');
           return true;
         } else {
@@ -231,37 +178,13 @@ function LoginScreen({ navigation }) {
       }
 
       // Regular user login
-      console.log('Attempting user login...');
       const { data: userData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password: password,
       });
 
-      console.log('Login result:', userData, loginError);
-
       if (loginError) {
-        console.log('Login error details:', loginError);
-
-        if (loginError.message.includes("Invalid login credentials")) {
-          Alert.alert(
-            "Account Not Found",
-            "No account found with this email. Would you like to sign up instead?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Sign Up",
-                onPress: () => {
-                  setRole("User");
-                  handleSignup();
-                }
-              }
-            ]
-          );
-        } else if (loginError.message.includes("Email not confirmed")) {
-          Alert.alert("Email Not Verified", "Please check your email and click the verification link first.");
-        } else {
-          Alert.alert("Login Error", loginError.message);
-        }
+        Alert.alert("Login Error", loginError.message);
         return false;
       }
 
@@ -270,59 +193,7 @@ function LoginScreen({ navigation }) {
         return false;
       }
 
-      console.log('User logged in, checking profile...');
-
-      // Get user profile to check role
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userData.user.id)
-        .single();
-
-      console.log('Profile query result:', profile, profileError);
-
-      if (profileError) {
-        console.log('Profile error details:', profileError);
-
-        if (profileError.code === 'PGRST116') {
-          Alert.alert(
-            "Profile Missing",
-            "No profile found. This might be because:\n" +
-            "1. Profile wasn't created during signup\n" +
-            "2. Database policies are blocking access\n\n" +
-            "Try signing up again or check your database."
-          );
-        } else {
-          Alert.alert("Profile Error", profileError.message);
-        }
-        return false;
-      }
-
-      // Check if role matches UI selection
-      if (profile.role !== role) {
-        Alert.alert(
-          "Role Mismatch",
-          `This account is registered as a ${profile.role}, but you selected ${role}.\n\nWould you like to login as ${profile.role}?`,
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Yes",
-              onPress: () => {
-                setRole(profile.role);
-                Alert.alert("Welcome!", `Successfully logged in as ${profile.role}!`);
-                setEmail("");
-                setPassword("");
-                navigation.navigate('MainTabs');
-              }
-            }
-          ]
-        );
-        return false;
-      }
-
-      Alert.alert("Welcome!", `Successfully logged in as ${profile.role}!`);
-      setEmail("");
-      setPassword("");
+      // Navigate to main tabs
       navigation.navigate('MainTabs');
       return true;
 
@@ -339,24 +210,14 @@ function LoginScreen({ navigation }) {
       contentContainerStyle={styles.container}
       keyboardShouldPersistTaps="handled"
     >
-      {/* Hall Image */}
       <Image
         source={require('./assets/hubble_image.png')}
         style={styles.hubbleImage}
       />
 
-      {/* Title */}
-      {/* <Text style={styles.title}>Hall 5 Login System</Text> */}
-
-      {/* Test Supabase Button */}
-      {/* <TouchableOpacity style={styles.testButton} onPress={testSupabase}>
-        <Text style={styles.testButtonText}>Test Supabase Connection</Text>
-      </TouchableOpacity> */}
-
       {/* Role Selection */}
       <View style={styles.newRoleContainer}>
         <Text style={styles.roleLabel}>Select Your Role:</Text>
-
         <View style={styles.circleButtonRow}>
           {/* USER */}
           <TouchableOpacity
@@ -384,10 +245,9 @@ function LoginScreen({ navigation }) {
             <Text style={styles.circleText}>ADMIN</Text>
           </TouchableOpacity>
         </View>
-
       </View>
 
-      {/* Email Label and Input */}
+      {/* Email */}
       <Text style={styles.inputLabel}>Email</Text>
       <TextInput
         style={styles.input}
@@ -399,7 +259,7 @@ function LoginScreen({ navigation }) {
         autoCorrect={false}
       />
 
-      {/* Password Label and Input */}
+      {/* Password */}
       <Text style={styles.inputLabel}>Password</Text>
       <TextInput
         style={styles.input}
@@ -411,36 +271,26 @@ function LoginScreen({ navigation }) {
         autoCorrect={false}
       />
 
-      {/* Admin Info Display */}
-      {role === "Admin" && (
-        <View style={styles.adminInfo}>
-          <Text style={styles.adminInfoText}>Admin Login Info:</Text>
-          <Text style={styles.adminInfoText}>Email: admin@gmail.com</Text>
-          <Text style={styles.adminInfoText}>Password: 000000</Text>
-        </View>
-      )}
-
-      {/* Buttons- only shown when both password and email fields filled  */}
+      {/* Buttons */}
       {email.trim() !== "" && password.trim() !== "" && (
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-        style={[styles.button, styles.loginButton]}
-        onPress={handleLogin}
-        activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Login</Text>
-        </TouchableOpacity>
-        
-        {role !== "Admin" && (
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-          style={[styles.button, styles.signupButton]}
-          onPress={handleSignup}
-          activeOpacity={0.8}
+            style={[styles.button, styles.loginButton]}
+            onPress={handleLogin}
+            activeOpacity={0.8}
           >
-            <Text style={styles.buttonText}>Sign Up</Text>
+            <Text style={styles.buttonText}>Login</Text>
           </TouchableOpacity>
-        )}
-      </View>
+          {role !== "Admin" && (
+            <TouchableOpacity
+              style={[styles.button, styles.signupButton]}
+              onPress={handleSignup}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       )}
 
       <StatusBar style="auto" />
@@ -455,26 +305,21 @@ export default function App() {
     async function loadFonts() {
       try {
         await Font.loadAsync({
-          // Replace these with your actual Google Font file names
           'Baloo2-Regular': require('./assets/fonts/Baloo2-Regular.ttf'),
           'Baloo2-Medium': require('./assets/fonts/Baloo2-Medium.ttf'),
           'Baloo2-Bold': require('./assets/fonts/Baloo2-Bold.ttf'),
           'Baloo2-ExtraBold': require('./assets/fonts/Baloo2-ExtraBold.ttf'),
           'Baloo2-SemiBold': require('./assets/fonts/Baloo2-SemiBold.ttf'),
-          // Add more font weights/styles as needed
         });
       } catch (error) {
         console.warn('Error loading fonts:', error);
       } finally {
-        // Set fonts as loaded regardless of success/failure
         setFontsLoaded(true);
       }
     }
-
     loadFonts();
   }, []);
 
-  // Simple loading screen while fonts load
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
@@ -486,56 +331,15 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen
-          name="Login"
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="MainTabs"
-          component={MainTabs}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="EventPage"
-          component={EventPage}
-          options={{ title: 'Event Details' }}
-        />
-        <Stack.Screen
-          name="AdminPage"
-          component={CreateEvent}
-          options={{ title: 'Event Details' }}
-          />
-          
-          <Stack.Screen
-          name="AdminHome"
-          component={AdminHome}
-          options={{ title: 'Admin Home' }}
-        />
-
-        <Stack.Screen
-          name="AdminEventListItem"
-          component={AdminEventListItem}
-          options={{ }}
-        />
-
-        <Stack.Screen
-          name="AdminEventPage"
-          component={AdminEventPage}
-          options={{ title: 'Event Tracking Details' }}
-        />
-
-        <Stack.Screen
-          name="EditEvent"
-          component={EditEvent}
-          options={{ title: 'Edit Event Page' }}
-        />
-
-         <Stack.Screen
-          name="TinderView"
-          component={TinderView}
-          options={{ title: 'Event Home' }}
-        />
+        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen name="EventPage" component={EventPage} options={{ title: 'Event Details' }} />
+        <Stack.Screen name="AdminPage" component={CreateEvent} options={{ title: 'Event Details' }} />
+        <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: 'Admin Home' }} />
+        <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
+        <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ title: 'Event Tracking Details' }} />
+        <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
+        <Stack.Screen name="TinderView" component={TinderView} options={{ title: 'Event Home' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -555,32 +359,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 20,
     resizeMode: 'contain',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  testButton: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  testButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-
-  // Role selector
-  newRoleContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: -30,
-    marginBottom: 20,
   },
   roleLabel: {
     fontSize: 20,
@@ -630,11 +408,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Baloo2-ExtraBold',
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  currentRole: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
   },
   inputLabel: {
     fontSize: 16,
