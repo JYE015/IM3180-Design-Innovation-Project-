@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import  AdminEventListItem from '../components/AdminEventListItem';
+import AdminEventListItem from '../components/AdminEventListItem';
 import { supabase } from '../lib/supabase';
 
 /* 
@@ -206,8 +206,7 @@ export default function AdminHome() {
                 style={[styles.menuItem, { backgroundColor: '#ff9800', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
-                  // Add your announcements navigation here
-                  alert('Announcements feature coming soon!'); //remove this after annoucement page is
+                  navigation.navigate('AdminAnnouncements'); // ✅ Now navigates to announcements page
                 }}
               >
                 <Ionicons name="megaphone" size={24} color="white" />
@@ -357,4 +356,5 @@ const styles = StyleSheet.create({
   },
   fabActive: {
     backgroundColor: '#f44336'
-  }});
+  }
+});

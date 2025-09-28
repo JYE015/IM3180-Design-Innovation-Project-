@@ -34,6 +34,9 @@ import AdminEventPage from './components/AdminEventPage';
 // ✅ NEW: Import Announcements
 import Announcements from './screens/Announcements';
 
+// ✅ NEW: Import AdminAnnouncements
+import AdminAnnouncements from './screens/AdminAnnouncements';
+
 // Import icons
 import { Ionicons } from '@expo/vector-icons';
 
@@ -340,6 +343,13 @@ export default function App() {
         <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ title: 'Event Tracking Details' }} />
         <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
         <Stack.Screen name="TinderView" component={TinderView} options={{ title: 'Event Home' }} />
+
+        {/* ✅ NEW: Register AdminAnnouncements screen */}
+        <Stack.Screen 
+          name="AdminAnnouncements" 
+          component={AdminAnnouncements} 
+          options={{ title: 'Admin Announcements' }} 
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
