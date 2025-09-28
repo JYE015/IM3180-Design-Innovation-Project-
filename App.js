@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // Add useEffect here
 import {
   Alert,
   Image,
@@ -11,6 +11,9 @@ import {
   View,
 } from 'react-native';
 import { supabase } from './lib/supabase';
+
+// Add font loading import
+import * as Font from 'expo-font';
 
 // React Navigation
 import { NavigationContainer } from '@react-navigation/native';
@@ -338,7 +341,7 @@ function LoginScreen({ navigation }) {
     >
       {/* Hall Image */}
       <Image
-        source={require('./assets/hubble_image.jpg')}
+        source={require('./assets/hubble_image.png')}
         style={styles.hubbleImage}
       />
 
@@ -382,10 +385,10 @@ function LoginScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.currentRole}>Selected: {role}</Text>
       </View>
 
-      {/* Email Input */}
+      {/* Email Label and Input */}
+      <Text style={styles.inputLabel}>Email</Text>
       <TextInput
         style={styles.input}
         placeholder={role === "Admin" ? "Admin Email" : "Your Email"}
@@ -396,7 +399,8 @@ function LoginScreen({ navigation }) {
         autoCorrect={false}
       />
 
-      {/* Password Input */}
+      {/* Password Label and Input */}
+      <Text style={styles.inputLabel}>Password</Text>
       <TextInput
         style={styles.input}
         placeholder={role === "Admin" ? "Admin Password" : "Your Password"}
@@ -416,26 +420,28 @@ function LoginScreen({ navigation }) {
         </View>
       )}
 
-      {/* Buttons */}
+      {/* Buttons- only shown when both password and email fields filled  */}
+      {email.trim() !== "" && password.trim() !== "" && (
       <View style={styles.buttonContainer}>
         <TouchableOpacity
-          style={[styles.button, styles.loginButton]}
-          onPress={handleLogin}
-          activeOpacity={0.8}
+        style={[styles.button, styles.loginButton]}
+        onPress={handleLogin}
+        activeOpacity={0.8}
         >
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
-
+        
         {role !== "Admin" && (
           <TouchableOpacity
-            style={[styles.button, styles.signupButton]}
-            onPress={handleSignup}
-            activeOpacity={0.8}
+          style={[styles.button, styles.signupButton]}
+          onPress={handleSignup}
+          activeOpacity={0.8}
           >
             <Text style={styles.buttonText}>Sign Up</Text>
           </TouchableOpacity>
         )}
       </View>
+      )}
 
       <StatusBar style="auto" />
     </ScrollView>
@@ -443,13 +449,47 @@ function LoginScreen({ navigation }) {
 }
 
 export default function App() {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  useEffect(() => {
+    async function loadFonts() {
+      try {
+        await Font.loadAsync({
+          // Replace these with your actual Google Font file names
+          'Baloo2-Regular': require('./assets/fonts/Baloo2-Regular.ttf'),
+          'Baloo2-Medium': require('./assets/fonts/Baloo2-Medium.ttf'),
+          'Baloo2-Bold': require('./assets/fonts/Baloo2-Bold.ttf'),
+          'Baloo2-ExtraBold': require('./assets/fonts/Baloo2-ExtraBold.ttf'),
+          'Baloo2-SemiBold': require('./assets/fonts/Baloo2-SemiBold.ttf'),
+          // Add more font weights/styles as needed
+        });
+      } catch (error) {
+        console.warn('Error loading fonts:', error);
+      } finally {
+        // Set fonts as loaded regardless of success/failure
+        setFontsLoaded(true);
+      }
+    }
+
+    loadFonts();
+  }, []);
+
+  // Simple loading screen while fonts load
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ title: 'Hall 5 Login' }}
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="MainTabs"
@@ -505,17 +545,15 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
-    paddingVertical: 40,
     paddingHorizontal: 20,
   },
   hubbleImage: {
-    width: '100%',
+    width: '115%',
     height: 400,
     borderRadius: 12,
-    marginBottom: 20,
-    backgroundColor: '#e0e0e0',
+    marginTop: 20,
     resizeMode: 'contain',
   },
   title: {
@@ -541,21 +579,15 @@ const styles = StyleSheet.create({
   newRoleContainer: {
     width: '100%',
     alignItems: 'center',
-    marginBottom: 25,
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginTop: -30,
+    marginBottom: 20,
   },
   roleLabel: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 5,
   },
   circleButtonRow: {
     flexDirection: 'row',
@@ -565,9 +597,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   circleButton: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 120,
+    height: 50,
+    borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -594,7 +626,8 @@ const styles = StyleSheet.create({
   },
   circleText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 20,
+    fontFamily: 'Baloo2-ExtraBold',
     fontWeight: 'bold',
     textAlign: 'center',
   },
@@ -603,7 +636,15 @@ const styles = StyleSheet.create({
     color: '#666',
     fontWeight: '500',
   },
-
+  inputLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
+    color: '#333',
+    marginBottom: 5,
+    alignSelf: 'flex-start',
+    marginLeft: 5,
+  },
   input: {
     width: '100%',
     height: 55,
@@ -612,6 +653,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     marginBottom: 15,
     fontSize: 16,
+    fontFamily: 'Baloo2-Regular',
     borderWidth: 1,
     borderColor: '#e0e0e0',
     shadowColor: '#000',
@@ -661,7 +703,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
   },
 });
