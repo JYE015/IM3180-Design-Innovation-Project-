@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,24 +10,57 @@ import dayjs from 'dayjs';
 export default function AdminEventPage({ route, navigation }) {
   const { event } = route.params;
 
+  
   console.log("event:", event);
   console.log("event.id:", event?.id);
 
-  const [signups, setSignups] = useState({ CurrentParticipants: 0, MaximumParticipants: 0 });
+  const [evt, setEvt] = useState(event);
+  const [signups, setSignups] = useState({
+    CurrentParticipants: 0,
+    MaximumParticipants: event?.MaximumParticipants ?? 0,
+  });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSignups();
-  }, []);
+  
+  const fetchEventDetails = async () => {
+    if (!event?.id) return;
+    try {
+      const { data, error } = await supabase
+        .from('Events')
+        .select('id, Title, Date, Time, image_url, MaximumParticipants')
+        .eq('id', event.id)
+        .single();
+
+      if (error) throw error;
+
+      setEvt({
+        id: data.id,
+        title: data.Title,
+        date: data.Date,
+        time: data.Time,
+        image_url: data.image_url,
+        MaximumParticipants: data.MaximumParticipants,
+      });
+
+      setSignups((prev) => ({
+        CurrentParticipants: prev.CurrentParticipants ?? 0,
+        MaximumParticipants:
+          data.MaximumParticipants ?? prev.MaximumParticipants ?? 0,
+      }));
+    } catch (err) {
+      console.error('Error fetching event details:', err);
+    }
+  };
 
   const fetchSignups = async () => {
     try {
+      if (!event?.id) return;
       setLoading(true);
       const { data, error } = await supabase
         .from('Events')
         .select('CurrentParticipants, MaximumParticipants')
-        .eq('id', event.id)
-        .single();
+        .eq('id', event.id)   // ← use event.id from props
+        .single();  
 
       if (error) throw error;
       setSignups(data || { CurrentParticipants: 0, MaximumParticipants: 0 });
@@ -37,10 +71,29 @@ export default function AdminEventPage({ route, navigation }) {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchEventDetails();
+      fetchSignups();
+    }, [event?.id])
+  );
+
   const formatDate = (date, time) => {
     if (!date) return '';
     const formattedDate = dayjs(date).format('DD MMM YYYY');
-    return time ? `${formattedDate}, ${time}` : formattedDate;
+    
+    if (!time) return formattedDate;
+    
+    // Handle time with or without seconds (HH:MM:SS or HH:MM)
+    const timeParts = time.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+    
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const formattedTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    
+    return `${formattedDate}, ${formattedTime}`;
   };
 
   return (
@@ -56,8 +109,16 @@ export default function AdminEventPage({ route, navigation }) {
         <Text style={styles.headerTitle}>TRACKER</Text>
         <TouchableOpacity 
           style={styles.editButton}
-          onPress={() => {console.log("event.id:", event?.id);
-          navigation.navigate('EditEvent', { eventId: event.id })}}
+          onPress={() => {
+            if (!evt?.id) return;
+            navigation.navigate('EditEvent', { 
+              eventId: evt.id,
+              onUpdated: async () => {       
+                await fetchEventDetails();
+                await fetchSignups();
+              }
+            });
+          }}
         >
           <Ionicons name="create-outline" size={24} color="#000" />
         </TouchableOpacity>
@@ -65,18 +126,25 @@ export default function AdminEventPage({ route, navigation }) {
 
       {/* Event Title and Date */}
       <View style={styles.eventHeader}>
-        <Text style={styles.eventTitle}>{event.title}</Text>
+        <Text style={styles.eventTitle}>{evt?.title}</Text>
         <Text style={styles.eventDate}>
-          {formatDate(event.date, event.time)}
+          {formatDate(evt?.date, evt?.time)}
         </Text>
       </View>
 
+
       {/* Image */}
       <View style={styles.statsCard}>
-        <Image
-                source={{ uri: event.image_url }}
-                style={styles.image}
-              />
+        {evt?.image_url ? (
+          <Image
+            source={{ uri: evt.image_url }}
+            style={styles.image}
+          />
+        ) : (
+          <View style={[styles.image, { justifyContent: 'center', alignItems: 'center' }]}>
+            <Text style={{ color: '#999' }}>No image</Text>
+          </View>
+        )}
       </View>
 
       {/* Stats Card */}
@@ -85,13 +153,17 @@ export default function AdminEventPage({ route, navigation }) {
         <View style={styles.statsNumbers}>
           <Text style={styles.currentNumber}>{signups.CurrentParticipants || 0}</Text>
           <Text style={styles.divider}>/</Text>
-          <Text style={styles.maxNumber}>{signups.MaximumParticipants || event.MaximumParticipants}</Text>
+          <Text style={styles.maxNumber}>
+            {signups.MaximumParticipants || evt?.MaximumParticipants || 0}
+          </Text>
         </View>
       </View>
 
     </SafeAreaView>
   );
 }
+
+
 
 const styles = StyleSheet.create({
   container: {

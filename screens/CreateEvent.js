@@ -14,6 +14,141 @@ import {
 import { supabase } from "../lib/supabase";
 import { Calendar } from 'react-native-calendars';
 
+
+
+const TimePickerModal = ({ visible, selectedTime, onTimeSelect, onClose, title = "Select Time" }) => {
+  const parseTime = (timeStr) => {
+    if (!timeStr) return { hour: 12, minute: 0, period: 'PM' };
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return {
+      hour: hours === 0 ? 12 : hours > 12 ? hours - 12 : hours,
+      minute: minutes,
+      period: hours >= 12 ? 'PM' : 'AM'
+    };
+  };
+
+  const initialTime = parseTime(selectedTime);
+  const [selectedHour, setSelectedHour] = useState(initialTime.hour);
+  const [selectedMinute, setSelectedMinute] = useState(initialTime.minute);
+  const [selectedPeriod, setSelectedPeriod] = useState(initialTime.period);
+
+  const handleConfirm = () => {
+    let hour24 = selectedHour;
+    if (selectedPeriod === 'PM' && selectedHour !== 12) {
+      hour24 = selectedHour + 12;
+    } else if (selectedPeriod === 'AM' && selectedHour === 12) {
+      hour24 = 0;
+    }
+    
+    const timeString = `${hour24.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+    onTimeSelect(timeString);
+    onClose();
+  };
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
+      <View style={calendarStyles.modalOverlay}>
+        <View style={calendarStyles.timePickerContainer}>
+          <Text style={calendarStyles.modalTitle}>{title}</Text>
+          
+          <View style={calendarStyles.timeDisplay}>
+            <Text style={calendarStyles.timeDisplayText}>
+              {selectedHour}:{selectedMinute.toString().padStart(2, '0')} {selectedPeriod}
+            </Text>
+          </View>
+
+          <View style={calendarStyles.pickerRow}>
+            {/* Hours */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Hour</Text>
+              <ScrollView style={calendarStyles.scrollPicker} showsVerticalScrollIndicator={false}>
+                {hours.map((hour) => (
+                  <TouchableOpacity
+                    key={hour}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedHour === hour && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedHour(hour)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedHour === hour && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {hour}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Minutes */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Minute</Text>
+              <ScrollView style={calendarStyles.scrollPicker} showsVerticalScrollIndicator={false}>
+                {minutes.map((minute) => (
+                  <TouchableOpacity
+                    key={minute}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedMinute === minute && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedMinute(minute)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedMinute === minute && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {minute.toString().padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* AM/PM */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Period</Text>
+              <View style={calendarStyles.periodContainer}>
+                {['AM', 'PM'].map((period) => (
+                  <TouchableOpacity
+                    key={period}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedPeriod === period && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedPeriod(period)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedPeriod === period && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {period}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <View style={calendarStyles.buttonRow}>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.cancelButton]} onPress={onClose}>
+              <Text style={calendarStyles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.confirmButton]} onPress={handleConfirm}>
+              <Text style={calendarStyles.confirmButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+
 const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "Select Date" }) => {
   const [selected, setSelected] = useState(selectedDate || '');
 
@@ -68,6 +203,16 @@ export default function CreateEvent() {
   const [isLoading, setIsLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
+  // Calendar & Time Modals
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [showDeadlineCalendar, setShowDeadlineCalendar] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // Handle time selection from picker
+  const handleTimeSelect = (time) => {
+    handleInputChange("time", time);
+  };
+
   // Handle date selection from calendar
   const handleDateSelect = (date) => {
       handleInputChange("date", date);
@@ -86,10 +231,7 @@ export default function CreateEvent() {
     }));
   };
 
-  // Calendar Modals
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [showDeadlineCalendar, setShowDeadlineCalendar] = useState(false);
-  
+
   // Image Uploader
   const pickImage = async () => {
     try {
@@ -347,14 +489,17 @@ export default function CreateEvent() {
             </Text>
           </TouchableOpacity>
         </View>
+        
         <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={styles.label}>Time</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="HH:MM (24hr)"
-            value={eventData.time}
-            onChangeText={(value) => handleInputChange("time", value)}
-          />
+          <Text style={styles.label}>Time *</Text>
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={[styles.datePickerText, !eventData.time && styles.placeholderText]}>
+              {eventData.time || "Select Time"}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -465,6 +610,15 @@ export default function CreateEvent() {
         onDateSelect={handleDeadlineSelect}
         onClose={() => setShowDeadlineCalendar(false)}
         title="Select Registration Deadline"
+      />
+      
+      {/* Time Picker Modal */}
+      <TimePickerModal
+        visible={showTimePicker}
+        selectedTime={eventData.time}
+        onTimeSelect={handleTimeSelect}
+        onClose={() => setShowTimePicker(false)}
+        title="Select Event Time"
       />
     </ScrollView>
   );
@@ -659,5 +813,71 @@ const calendarStyles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  timePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  timeDisplay: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  timeDisplayText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 200,
+    marginBottom: 15,
+  },
+  pickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 10,
+  },
+  scrollPicker: {
+    maxHeight: 150,
+    width: '100%',
+  },
+  periodContainer: {
+    width: '100%',
+  },
+  pickerOption: {
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 6,
+    marginVertical: 2,
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#4CAF50',
+  },
+  pickerOptionText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  pickerOptionTextSelected: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import * as ImagePicker from "expo-image-picker";
 import {
     View,
@@ -15,9 +15,140 @@ import {
 import {supabase} from "../lib/supabase";
 import { Calendar } from 'react-native-calendars';
 
+const TimePickerModal = ({ visible, selectedTime, onTimeSelect, onClose, title = "Select Time" }) => {
+  const parseTime = (timeStr) => {
+    if (!timeStr) return { hour: 12, minute: 0, period: 'PM' };
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return {
+      hour: hours === 0 ? 12 : hours > 12 ? hours - 12 : hours,
+      minute: minutes,
+      period: hours >= 12 ? 'PM' : 'AM'
+    };
+  };
+
+  const initialTime = parseTime(selectedTime);
+  const [selectedHour, setSelectedHour] = useState(initialTime.hour);
+  const [selectedMinute, setSelectedMinute] = useState(initialTime.minute);
+  const [selectedPeriod, setSelectedPeriod] = useState(initialTime.period);
+
+  const handleConfirm = () => {
+    let hour24 = selectedHour;
+    if (selectedPeriod === 'PM' && selectedHour !== 12) {
+      hour24 = selectedHour + 12;
+    } else if (selectedPeriod === 'AM' && selectedHour === 12) {
+      hour24 = 0;
+    }
+    
+    const timeString = `${hour24.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
+    onTimeSelect(timeString);
+    onClose();
+  };
+
+  const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+  const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+  return (
+    <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
+      <View style={calendarStyles.modalOverlay}>
+        <View style={calendarStyles.timePickerContainer}>
+          <Text style={calendarStyles.modalTitle}>{title}</Text>
+          
+          <View style={calendarStyles.timeDisplay}>
+            <Text style={calendarStyles.timeDisplayText}>
+              {selectedHour}:{selectedMinute.toString().padStart(2, '0')} {selectedPeriod}
+            </Text>
+          </View>
+
+          <View style={calendarStyles.pickerRow}>
+            {/* Hours */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Hour</Text>
+              <ScrollView style={calendarStyles.scrollPicker} showsVerticalScrollIndicator={false}>
+                {hours.map((hour) => (
+                  <TouchableOpacity
+                    key={hour}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedHour === hour && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedHour(hour)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedHour === hour && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {hour}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Minutes */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Minute</Text>
+              <ScrollView style={calendarStyles.scrollPicker} showsVerticalScrollIndicator={false}>
+                {minutes.map((minute) => (
+                  <TouchableOpacity
+                    key={minute}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedMinute === minute && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedMinute(minute)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedMinute === minute && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {minute.toString().padStart(2, '0')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* AM/PM */}
+            <View style={calendarStyles.pickerColumn}>
+              <Text style={calendarStyles.pickerLabel}>Period</Text>
+              <View style={calendarStyles.periodContainer}>
+                {['AM', 'PM'].map((period) => (
+                  <TouchableOpacity
+                    key={period}
+                    style={[
+                      calendarStyles.pickerOption,
+                      selectedPeriod === period && calendarStyles.pickerOptionSelected
+                    ]}
+                    onPress={() => setSelectedPeriod(period)}
+                  >
+                    <Text style={[
+                      calendarStyles.pickerOptionText,
+                      selectedPeriod === period && calendarStyles.pickerOptionTextSelected
+                    ]}>
+                      {period}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          <View style={calendarStyles.buttonRow}>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.cancelButton]} onPress={onClose}>
+              <Text style={calendarStyles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[calendarStyles.modalButton, calendarStyles.confirmButton]} onPress={handleConfirm}>
+              <Text style={calendarStyles.confirmButtonText}>Confirm</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
 
 const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "Select Date" }) => {
-  const [selected, setSelected] = React.useState(selectedDate || '');
+  const [selected, setSelected] = useState(selectedDate || '');
 
   const handleDayPress = (day) => {
     setSelected(day.dateString);
@@ -58,10 +189,11 @@ const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "
 export default function EditEvent({ route, navigation }) {
     // Getting event ID from navigation params
     const { eventId } = route.params;
-    const [showCalendar, setShowCalendar] = React.useState(false);
-    const [showDeadlineCalendar, setShowDeadlineCalendar] = React.useState(false);
+    const [showCalendar, setShowCalendar] = useState(false);
+    const [showDeadlineCalendar, setShowDeadlineCalendar] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
-    const [eventData, setEventData] = React.useState({
+    const [eventData, setEventData] = useState({
         event_title:"",
         date: "",
         time: "",
@@ -73,10 +205,10 @@ export default function EditEvent({ route, navigation }) {
         location: ""
     });
 
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [uploadingImage, setUploadingImage] = React.useState(false);
-    const [fetchingEvent, setFetchingEvent] = React.useState(true);
-    const [originalImageUri, setOriginalImageUri] = React.useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [uploadingImage, setUploadingImage] = useState(false);
+    const [fetchingEvent, setFetchingEvent] = useState(true);
+    const [originalImageUri, setOriginalImageUri] = useState("");
 
     // Fetching Existing Data
     useEffect(() => {
@@ -141,6 +273,10 @@ const fetchEventData = async () => {
     // Handle deadline selection from calendar
     const handleDeadlineSelect = (date) => {
         handleInputChange("registration_deadline", date);
+    };
+
+    const handleTimeSelect = (time /* "HH:MM" 24h */) => {
+      handleInputChange("time", time);
     };
     
     // Image Upload Function
@@ -354,10 +490,13 @@ const fetchEventData = async () => {
       if (eventData.location) {
         payload.Location = eventData.location;
       }
-      if (eventData.image_uri) {
+      if (eventData.image_url) {
         payload.image_url = eventData.image_uri;
       }
-      if (eventData.registration_deadline) {
+      if (imageUrl !== undefined) {
+        payload.image_url = imageUrl || null;
+      }
+        if (eventData.registration_deadline) {
         payload.Deadline = eventData.registration_deadline;
       }
       if (eventData.tags) {
@@ -380,7 +519,13 @@ const fetchEventData = async () => {
         Alert.alert("Error", `Failed to update event: ${error.message}`);
       } else {
         Alert.alert("Success", "Event updated successfully!", [
-          { text: "OK", onPress: () => navigation.goBack() }
+          { 
+            text: "OK", 
+            onPress: () => {
+              route.params?.onUpdated?.();   
+              navigation.goBack();
+            } 
+          }
         ]);
       }
     } catch (err) {
@@ -431,26 +576,43 @@ const fetchEventData = async () => {
       </View>
       
       {/* Date & Time Row */}
-      <View style={[styles.inputGroup, styles.halfWidth]}>
-        <Text style={styles.label}>Date *</Text>
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={() => setShowCalendar(true)}
-        >
-          <Text style={[styles.datePickerText, !eventData.date && styles.placeholderText]}>
-            {eventData.date || "Select Date"}
-          </Text>
-        </TouchableOpacity>
+      <View style={[styles.rowContainer]}>
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>Date *</Text>
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowCalendar(true)}
+          >
+            <Text style={[styles.datePickerText, !eventData.date && styles.placeholderText]}>
+              {eventData.date || "Select Date"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={[styles.inputGroup, styles.halfWidth]}>
+          <Text style={styles.label}>Time *</Text>
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowTimePicker(true)}
+          >
+            <Text style={[styles.datePickerText, !eventData.time && styles.placeholderText]}>
+              {eventData.time || "Select Time"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
+      
       <View style={[styles.inputGroup, styles.halfWidth]}>
-        <Text style={styles.label}>Time</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="HH:MM (24hr)"
-          value={eventData.time}
-          onChangeText={(value) => handleInputChange("time", value)}
-        />
+        <Text style={styles.label}>Time *</Text>
+        <TouchableOpacity
+          style={styles.datePickerButton}
+          onPress={() => setShowTimePicker(true)}
+        >
+          <Text style={[styles.datePickerText, !eventData.time && styles.placeholderText]}>
+            {eventData.time || "Select Time"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Image Upload */}
@@ -570,7 +732,16 @@ const fetchEventData = async () => {
         onClose={() => setShowDeadlineCalendar(false)}
         title="Select Registration Deadline"
       />
-    </ScrollView>
+
+      {/* Time Picker Modal */}
+        <TimePickerModal
+          visible={showTimePicker}
+          selectedTime={eventData.time}
+          onTimeSelect={handleTimeSelect}
+          onClose={() => setShowTimePicker(false)}
+          title="Select Event Time"
+        />
+      </ScrollView>
   );
 }
 
@@ -797,5 +968,71 @@ const calendarStyles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  timePickerContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 20,
+    margin: 20,
+    maxWidth: 400,
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  timeDisplay: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  timeDisplayText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+  },
+  pickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    height: 200,
+    marginBottom: 15,
+  },
+  pickerColumn: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  pickerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 10,
+  },
+  scrollPicker: {
+    maxHeight: 150,
+    width: '100%',
+  },
+  periodContainer: {
+    width: '100%',
+  },
+  pickerOption: {
+    padding: 12,
+    alignItems: 'center',
+    borderRadius: 6,
+    marginVertical: 2,
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#4CAF50',
+  },
+  pickerOptionText: {
+    fontSize: 18,
+    color: '#333',
+  },
+  pickerOptionTextSelected: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

@@ -29,7 +29,7 @@ export default function UserProfile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-
+  const [showImageOptions, setShowImageOptions] = useState(false);
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [school, setSchool] = useState('');
@@ -216,72 +216,160 @@ export default function UserProfile() {
     );
   };
 
-  const pickAndUploadImage = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Please allow photo library access to upload an avatar.');
-        return;
-      }
+  // Pick image from gallery
+const pickImage = async () => {
+  try {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+      return;
+    }
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.9,
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadImageToSupabase(result.assets[0].uri);
+    }
+  } catch (error) {
+    console.error('Error picking image:', error);
+    Alert.alert('Error', 'Failed to pick image. Please try again.');
+  }
+};
+
+// Take photo with camera
+const takePhoto = async () => {
+  try {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    
+    if (status !== 'granted') {
+      Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      await uploadImageToSupabase(result.assets[0].uri);
+    }
+  } catch (error) {
+    console.error('Error taking photo:', error);
+    Alert.alert('Error', 'Failed to take photo. Please try again.');
+  }
+};
+
+// Show image options dialog
+const showImageOptionsDialog = () => {
+  Alert.alert(
+    'Select Profile Photo',
+    'Choose how you want to add a photo',
+    [
+      { text: 'Camera', onPress: takePhoto },
+      { text: 'Gallery', onPress: pickImage },
+      ...(avatarUrl ? [{ text: 'Remove Photo', onPress: removePhoto, style: 'destructive' }] : []),
+      { text: 'Cancel', style: 'cancel' },
+    ]
+  );
+};
+
+// Remove photo
+const removePhoto = async () => {
+  try {
+    setUploading(true);
+    
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr) throw sessionErr;
+    const user = sessionData.session?.user;
+    if (!user) {
+      Alert.alert('Not logged in', 'Please log in first.');
+      setUploading(false);
+      return;
+    }
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: '' })
+      .eq('id', user.id);
+
+    if (updateError) throw updateError;
+
+    setAvatarUrl('');
+    Alert.alert('Success', 'Profile photo removed!');
+  } catch (err) {
+    console.log('remove photo error:', err);
+    Alert.alert('Error', err.message);
+  } finally {
+    setUploading(false);
+  }
+};
+
+// Upload image to Supabase (using ArrayBuffer like CreateEvent)
+const uploadImageToSupabase = async (imageUri) => {
+  if (!imageUri) return;
+
+  try {
+    setUploading(true);
+
+    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+    if (sessionErr) throw sessionErr;
+    const user = sessionData.session?.user;
+    if (!user) {
+      Alert.alert('Not logged in', 'Please log in first.');
+      setUploading(false);
+      return;
+    }
+
+    const fileExt = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `${user.id}/${fileName}`;
+
+    // Convert file URI → ArrayBuffer (like CreateEvent)
+    const response = await fetch(imageUri);
+    const arrayBuffer = await response.arrayBuffer();
+
+    // Upload as ArrayBuffer
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, arrayBuffer, {
+        contentType: `image/${fileExt}`,
       });
 
-      if (result.canceled) return;
-      setUploading(true);
+    if (uploadError) throw uploadError;
 
-      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-      if (sessionErr) throw sessionErr;
-      const user = sessionData.session?.user;
-      if (!user) {
-        Alert.alert('Not logged in', 'Please log in first.');
-        setUploading(false);
-        return;
-      }
+    // Get public URL
+    const { data: publicData } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
 
-      const localUri = result.assets[0].uri;
-      const ext = localUri.split('.').pop()?.toLowerCase() || 'jpg';
-      const fileName = `${Date.now()}.${ext}`;
-      const filePath = `${user.id}/${fileName}`;
+    const publicUrl = publicData.publicUrl;
 
-      const res = await fetch(localUri);
-      const blob = await res.blob();
+    // Update profile
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl })
+      .eq('id', user.id);
 
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, blob, {
-          contentType: blob.type || `image/${ext}`,
-          upsert: true,
-        });
+    if (updateError) throw updateError;
 
-      if (uploadError) throw uploadError;
+    setAvatarUrl(publicUrl);
+    Alert.alert('Success', 'Profile photo updated!');
+  } catch (err) {
+    console.error('avatar upload error:', err);
+    Alert.alert('Upload Error', err.message);
+  } finally {
+    setUploading(false);
+  }
+};
 
-      const { data: publicData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicData.publicUrl;
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', user.id);
-
-      if (updateError) throw updateError;
-
-      setAvatarUrl(publicUrl);
-      Alert.alert('Success', 'Profile photo updated!');
-    } catch (err) {
-      console.log('avatar upload error:', err);
-      Alert.alert('Upload Error', err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -312,16 +400,15 @@ export default function UserProfile() {
             )}
             <TouchableOpacity
               style={[styles.smallBtn, uploading && { opacity: 0.6 }]}
-              onPress={pickAndUploadImage}
+              onPress={showImageOptionsDialog}
               disabled={uploading}
               activeOpacity={0.85}
             >
               <Text style={styles.smallBtnText}>
-                {uploading ? 'Uploading…' : 'Upload new photo'}
+                {uploading ? 'Uploading…' : avatarUrl ? 'Change Photo' : 'Add Photo'}
               </Text>
             </TouchableOpacity>
           </View>
-
           <Text style={styles.label}>Email (read-only)</Text>
           <TextInput style={[styles.input, styles.disabled]} value={email} editable={false} />
 
