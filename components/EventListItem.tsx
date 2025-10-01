@@ -3,6 +3,14 @@ import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
 import { TouchableOpacity, Image, StyleSheet, Text, View } from 'react-native';
 
+// Define your navigation routes
+type RootStackParamList = {
+  EventPage: { id: number };
+  // Add other routes here as needed (e.g., Home: undefined, Profile: { userId: string }, etc.)
+};
+
+type NavigationProp = import('@react-navigation/native').NavigationProp<RootStackParamList>;
+
 // Update the event type to match your new table
 //This page is for event list for the filtered events!
 type Event = {
@@ -25,7 +33,7 @@ type EventListItemProps = {
 //has both front and backend code here
 //anything with navigation don't change, anything with style need to change!
 export default function EventListItem({ event }: EventListItemProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp>();
   
   return (
     <TouchableOpacity 
@@ -92,10 +100,11 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 18,
     color: '#000',
+    fontFamily: 'Baloo2-Regular',
   },
   title: {
     fontSize: 30,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
     marginVertical: 5,
     marginHorizontal: 5,
   },
@@ -103,7 +112,7 @@ const styles = StyleSheet.create({
    details: {
     fontSize: 15,
     color: '#676767ff',
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-SemiBold',
     marginVertical: 8,
     marginHorizontal: 5,
     textTransform: 'uppercase'
@@ -112,7 +121,7 @@ const styles = StyleSheet.create({
    location: {
     fontSize: 15,
     color: '#2c2b2bff',
-    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     marginHorizontal: 5,
   },
 

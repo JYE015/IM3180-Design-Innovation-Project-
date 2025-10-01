@@ -27,6 +27,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
   chipActive: { backgroundColor: '#111', borderColor: '#111' },
-  label: { color: '#111', fontWeight: '600' },
+  label: { color: '#111', fontFamily: 'Baloo2-SemiBold' },
   labelActive: { color: '#fff' },
 });

@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 import EventListItem from '../components/EventListItem';
 import FilterBar, { FilterOption } from '../components/FilterBar'
@@ -133,16 +134,29 @@ export default function EventHome() {
   );
 
     return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ paddingHorizontal: 16, gap: 12 }}>
-        <TextInput 
-          style={styles.searchInput}
-          placeholder='Search events...'
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        <FilterBar value={filter} onChange={setFilter} />
-      </View>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <View style={styles.headerBackground}>
+          <View style={styles.searchRow}>
+            <View style={styles.searchContainer}>
+              <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+              <TextInput 
+              style={styles.searchInput}
+              placeholder='Search events...'
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              />
+            </View>
+            <Image 
+              source={require('../assets/hall1logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+        <View style={{ paddingHorizontal: 16 }}>
+          <FilterBar value={filter} onChange={setFilter} />
+        </View>
 
       {loading ? (
         <ActivityIndicator style={{ marginTop: 20 }} />
@@ -167,12 +181,17 @@ export default function EventHome() {
             ))}
         </ScrollView>
       )}
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#fff' },
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#B8C4FE',
+  },
+  container: { flex: 1, backgroundColor: '#fff' },
   messageContainer: { 
     flex: 1, 
     justifyContent: 'center', 
@@ -182,14 +201,42 @@ const styles = StyleSheet.create({
   messageText: { 
     fontSize: 16, 
     color: '#666',
-    textAlign: 'center'
+    textAlign: 'center',
+    fontFamily: 'Baloo2-Regular'
   },
-  searchInput: {
-    height: 40,
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
+    backgroundColor: '#fff',
     paddingHorizontal: 12,
-    backgroundColor: '#fff'
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+    fontFamily: 'Baloo2-Regular',
+  },
+  logo: {
+    width: 45,
+    height: 45,
+  },
+  headerBackground: {
+  backgroundColor: '#B8C4FE',
+  paddingHorizontal: 16,
+  paddingTop: 12,
+  paddingBottom: 16,
+  marginBottom: 12,
   }
 });

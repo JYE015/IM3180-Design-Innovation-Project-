@@ -97,22 +97,25 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: '#999',
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
   },
   cardContent: {
     padding: 12,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     marginBottom: 4,
   },
   cardDate: {
     fontSize: 14,
     color: '#666',
     marginBottom: 2,
+    fontFamily: 'Baloo2-Regular',
   },
   cardLocation: {
     fontSize: 14,
     color: '#666',
+    fontFamily: 'Baloo2-Regular',
   }
 });
