@@ -15,13 +15,16 @@ import {
   View
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import Feather from '@expo/vector-icons/Feather';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 const formatEventDateTime = (dateStr, timeStr) => {
   if (!dateStr) return '—';
   const iso = timeStr ? `${dateStr}T${timeStr}` : `${dateStr}T00:00:00`;
   const dt = new Date(iso);
   if (Number.isNaN(dt.getTime())) return '—';
-  return dt.toLocaleString(); // device locale
+  return dt.toLocaleString();
 };
 
 export default function UserProfile() {
@@ -104,7 +107,6 @@ export default function UserProfile() {
         return;
       }
 
-      // 1) Attendance rows
       const { data: rows, error: rowsErr } = await supabase
         .from('attendance')
         .select('id, created_at, event')
@@ -118,7 +120,6 @@ export default function UserProfile() {
         return;
       }
 
-      // 2) Events by IDs
       const eventIds = [...new Set(rows.map(r => r.event).filter(Boolean))];
       const { data: events, error: evErr } = await supabase
         .from('Events')
@@ -175,7 +176,6 @@ export default function UserProfile() {
     }
   };
 
-  // FIXED LOGOUT FUNCTION
   const handleLogout = async () => {
     Alert.alert(
       'Log Out',
@@ -192,7 +192,6 @@ export default function UserProfile() {
                 Alert.alert('Error', 'Failed to log out');
                 return;
               }
-              // Fixed navigation - navigate to root stack and reset to Login
               const parentNavigator = navigation.getParent();
               if (parentNavigator) {
                 parentNavigator.reset({
@@ -200,7 +199,6 @@ export default function UserProfile() {
                   routes: [{ name: 'Login' }],
                 });
               } else {
-                // Fallback if getParent() doesn't work
                 navigation.reset({
                   index: 0,
                   routes: [{ name: 'Login' }],
@@ -216,160 +214,150 @@ export default function UserProfile() {
     );
   };
 
-  // Pick image from gallery
-const pickImage = async () => {
-  try {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
-      return;
-    }
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      await uploadImageToSupabase(result.assets[0].uri);
-    }
-  } catch (error) {
-    console.error('Error picking image:', error);
-    Alert.alert('Error', 'Failed to pick image. Please try again.');
-  }
-};
-
-// Take photo with camera
-const takePhoto = async () => {
-  try {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      await uploadImageToSupabase(result.assets[0].uri);
-    }
-  } catch (error) {
-    console.error('Error taking photo:', error);
-    Alert.alert('Error', 'Failed to take photo. Please try again.');
-  }
-};
-
-// Show image options dialog
-const showImageOptionsDialog = () => {
-  Alert.alert(
-    'Select Profile Photo',
-    'Choose how you want to add a photo',
-    [
-      { text: 'Camera', onPress: takePhoto },
-      { text: 'Gallery', onPress: pickImage },
-      ...(avatarUrl ? [{ text: 'Remove Photo', onPress: removePhoto, style: 'destructive' }] : []),
-      { text: 'Cancel', style: 'cancel' },
-    ]
-  );
-};
-
-// Remove photo
-const removePhoto = async () => {
-  try {
-    setUploading(true);
-    
-    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-    if (sessionErr) throw sessionErr;
-    const user = sessionData.session?.user;
-    if (!user) {
-      Alert.alert('Not logged in', 'Please log in first.');
-      setUploading(false);
-      return;
-    }
-
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: '' })
-      .eq('id', user.id);
-
-    if (updateError) throw updateError;
-
-    setAvatarUrl('');
-    Alert.alert('Success', 'Profile photo removed!');
-  } catch (err) {
-    console.log('remove photo error:', err);
-    Alert.alert('Error', err.message);
-  } finally {
-    setUploading(false);
-  }
-};
-
-// Upload image to Supabase (using ArrayBuffer like CreateEvent)
-const uploadImageToSupabase = async (imageUri) => {
-  if (!imageUri) return;
-
-  try {
-    setUploading(true);
-
-    const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
-    if (sessionErr) throw sessionErr;
-    const user = sessionData.session?.user;
-    if (!user) {
-      Alert.alert('Not logged in', 'Please log in first.');
-      setUploading(false);
-      return;
-    }
-
-    const fileExt = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const filePath = `${user.id}/${fileName}`;
-
-    // Convert file URI → ArrayBuffer (like CreateEvent)
-    const response = await fetch(imageUri);
-    const arrayBuffer = await response.arrayBuffer();
-
-    // Upload as ArrayBuffer
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, arrayBuffer, {
-        contentType: `image/${fileExt}`,
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
       });
 
-    if (uploadError) throw uploadError;
+      if (!result.canceled && result.assets[0]) {
+        await uploadImageToSupabase(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
 
-    // Get public URL
-    const { data: publicData } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath);
+  const takePhoto = async () => {
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+        return;
+      }
 
-    const publicUrl = publicData.publicUrl;
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
 
-    // Update profile
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ avatar_url: publicUrl })
-      .eq('id', user.id);
+      if (!result.canceled && result.assets[0]) {
+        await uploadImageToSupabase(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    }
+  };
 
-    if (updateError) throw updateError;
+  const showImageOptionsDialog = () => {
+    Alert.alert(
+      'Select Profile Photo',
+      'Choose how you want to add a photo',
+      [
+        { text: 'Camera', onPress: takePhoto },
+        { text: 'Gallery', onPress: pickImage },
+        ...(avatarUrl ? [{ text: 'Remove Photo', onPress: removePhoto, style: 'destructive' }] : []),
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
 
-    setAvatarUrl(publicUrl);
-    Alert.alert('Success', 'Profile photo updated!');
-  } catch (err) {
-    console.error('avatar upload error:', err);
-    Alert.alert('Upload Error', err.message);
-  } finally {
-    setUploading(false);
-  }
-};
+  const removePhoto = async () => {
+    try {
+      setUploading(true);
+      
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
+      const user = sessionData.session?.user;
+      if (!user) {
+        Alert.alert('Not logged in', 'Please log in first.');
+        setUploading(false);
+        return;
+      }
 
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: '' })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl('');
+      Alert.alert('Success', 'Profile photo removed!');
+    } catch (err) {
+      console.log('remove photo error:', err);
+      Alert.alert('Error', err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const uploadImageToSupabase = async (imageUri) => {
+    if (!imageUri) return;
+
+    try {
+      setUploading(true);
+
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw sessionErr;
+      const user = sessionData.session?.user;
+      if (!user) {
+        Alert.alert('Not logged in', 'Please log in first.');
+        setUploading(false);
+        return;
+      }
+
+      const fileExt = imageUri.split('.').pop()?.toLowerCase() || 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const response = await fetch(imageUri);
+      const arrayBuffer = await response.arrayBuffer();
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, arrayBuffer, {
+          contentType: `image/${fileExt}`,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      Alert.alert('Success', 'Profile photo updated!');
+    } catch (err) {
+      console.error('avatar upload error:', err);
+      Alert.alert('Upload Error', err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -383,32 +371,41 @@ const uploadImageToSupabase = async (imageUri) => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.select({ ios: 'padding', android: undefined })}
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: '#ffffff' }}
     >
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.title}>My Profile</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>UPDATE PROFILE</Text>
+          <View style={styles.headerLogo}>
+            <Image 
+              source={require('../assets/hall1logo.png')} 
+              style={styles.headerLogoImage}
+              resizeMode="cover"
+            />
+          </View>
+        </View>
+
+        {/* Avatar positioned to overlap */}
+        <View style={styles.avatarWrapper}>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatarLarge} />
+          ) : (
+            <View style={styles.avatarPlaceholder} />
+          )}
+          <TouchableOpacity 
+            style={styles.editIconContainer}
+            onPress={showImageOptionsDialog} 
+            disabled={uploading}
+          >
+            <Feather name="edit-2" size={20} color="#666" />
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.card}>
-          {/* Avatar */}
-          <View style={styles.avatarRow}>
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, { alignItems: 'center', justifyContent: 'center' }]}>
-                <Text style={{ color: '#888', fontSize: 12 }}>No photo</Text>
-              </View>
-            )}
-            <TouchableOpacity
-              style={[styles.smallBtn, uploading && { opacity: 0.6 }]}
-              onPress={showImageOptionsDialog}
-              disabled={uploading}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.smallBtnText}>
-                {uploading ? 'Uploading…' : avatarUrl ? 'Change Photo' : 'Add Photo'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {/* Space for avatar overlap */}
+          <View style={styles.avatarSpace} />
+
           <Text style={styles.label}>Email (read-only)</Text>
           <TextInput style={[styles.input, styles.disabled]} value={email} editable={false} />
 
@@ -441,7 +438,6 @@ const uploadImageToSupabase = async (imageUri) => {
             {saving ? <ActivityIndicator /> : <Text style={styles.saveText}>Save Changes</Text>}
           </TouchableOpacity>
 
-          {/* Attended events toggle */}
           <TouchableOpacity
             style={[styles.smallBtn, { marginTop: 12 }]}
             onPress={() => {
@@ -449,19 +445,22 @@ const uploadImageToSupabase = async (imageUri) => {
               setShowEvents(!showEvents);
             }}
           >
-            <Text style={styles.smallBtnText}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <AntDesign name="unordered-list" size={18} color="white" />
+              <Text style={styles.smallBtnText}>
               {showEvents ? 'Hide Attended Events' : 'Show Attended Events'}
-            </Text>
+              </Text>
+            </View>
           </TouchableOpacity>
 
           {showEvents && (
-            <View style={{ marginTop: 12 }}>
+            <View style={styles.attendedSection}>
               {attendedEvents.length > 0 ? (
                 attendedEvents.map((row) => {
                   const ev = row.eventData || {};
                   const eventName = ev.Title || `Event #${row.event}`;
                   const eventWhen = formatEventDateTime(ev.Date, ev.Time);
-
+                  
                   return (
                     <View key={row.id} style={styles.eventItem}>
                       <Text style={styles.eventText}>{eventName}</Text>
@@ -471,17 +470,20 @@ const uploadImageToSupabase = async (imageUri) => {
                   );
                 })
               ) : (
-                <Text style={{ color: '#888' }}>No events attended yet.</Text>
-              )}
-            </View>
+            <Text style={styles.attendedEmpty}>No events attended yet.</Text>
           )}
+        </View>
+      )}
 
           <TouchableOpacity 
             style={styles.logoutBtn} 
             onPress={handleLogout} 
             activeOpacity={0.85}
           >
-            <Text style={styles.logoutText}>Log Out</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <MaterialIcons name="logout" size={20} color="#fff" />
+              <Text style={styles.logoutText}>Log Out</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -490,44 +492,123 @@ const uploadImageToSupabase = async (imageUri) => {
 }
 
 const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  container: { flexGrow: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 26, fontWeight: 'bold', marginBottom: 16, textAlign: 'center', color: '#333' },
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center',
+    backgroundColor: '#ffffff',
+  },
+  container: { 
+    flexGrow: 1, 
+    backgroundColor: '#ffffff',
+  },
+  
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    backgroundColor: '#B8C4FE',
+    paddingHorizontal: 20,
+    paddingTop: 75,
+    paddingBottom: 5,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
+    color: '#333',
+  },
+  headerLogo: {
+    width: 45,
+    height: 45,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 20,
+  },
+  headerLogoImage: {
+    width: '90%',
+    height: '90%',
+  },  
+  
+  // Avatar wrapper - positioned to overlap
+  avatarWrapper: {
+    alignItems: 'center',
+    marginTop: 20,
+    zIndex: 10,
+  },
+
+  avatarLarge: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#D3D3D3',
+  },
+  avatarPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#D3D3D3',
+  },
+
+  editIconContainer: {
+    position: 'absolute',
+    bottom: 0,
+    right: '35%',
+    backgroundColor: 'white',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 0,
+  },
+  
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
+    backgroundColor: '#B8D9FF',
+    borderRadius: 40,
     padding: 16,
+    marginTop: -60,
+    marginBottom: 0, 
+    paddingTop: 76,
+    paddingBottom: 40,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    minHeight: '100%', 
   },
 
-  avatarRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+  avatarSpace: {
+    height: 0,
   },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#eee',
-  },
+
   smallBtn: {
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     backgroundColor: '#4E8EF7',
     borderRadius: 8,
+    alignItems: 'center',   
+    justifyContent: 'center',
   },
   smallBtnText: {
     color: '#fff',
     fontWeight: '600',
+    fontFamily: 'Baloo2-ExtraBold',
+    textAlign: 'center', 
   },
 
-  label: { fontSize: 14, color: '#555', marginTop: 12, marginBottom: 6, fontWeight: '600' },
+  label: { 
+    fontSize: 14, 
+    color: '#555', 
+    marginTop: 8, 
+    marginBottom: 2, 
+    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
+  },
   input: {
     height: 50,
     backgroundColor: 'white',
@@ -535,6 +616,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: '#e0e0e0',
+    fontFamily: 'Baloo2-Regular',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   disabled: { backgroundColor: '#f0f0f0', color: '#777' },
   saveBtn: {
@@ -545,17 +631,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  saveText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-
+  saveText: { 
+    color: '#fff', 
+    fontWeight: 'bold', 
+    fontSize: 18,
+    fontFamily: 'Baloo2-ExtraBold',
+  },
+  attendedSection: {
+    marginTop: 12,
+    padding: 12,
+    paddingLeft: 14,          
+    backgroundColor: '#DBE7FF', 
+    borderRadius: 14,
+    borderLeftWidth: 5,
+    borderLeftColor: '#2563eb',
+  },
+  attendedEmpty: {
+    color: '#666',
+    fontFamily: 'Baloo2-Regular',
+  },
   eventItem: {
     padding: 10,
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
     marginBottom: 8,
   },
-  eventText: { fontWeight: '700', fontSize: 15, color: '#222' },
-  eventMeta: { color: '#666', marginTop: 2, fontSize: 13 },
-  eventDate: { fontSize: 12, color: '#444', marginTop: 4 },
+  eventText: { fontFamily: 'Baloo2-ExtraBold', fontSize: 15, color: '#222' },
+  eventMeta: { fontFamily: 'Baloo2-Regular',color: '#666', fontSize: 13 },
+  eventDate: { fontFamily: 'Baloo2-SemiBold',fontSize: 12, color: '#444', marginTop: 4 },
 
   logoutBtn: {
     marginTop: 12,
@@ -568,6 +671,7 @@ const styles = StyleSheet.create({
   logoutText: { 
     color: '#fff', 
     fontWeight: 'bold', 
-    fontSize: 16 
+    fontSize: 18,
+    fontFamily: 'Baloo2-ExtraBold',
   },
 });

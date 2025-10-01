@@ -515,14 +515,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#B8C4FE',
     paddingHorizontal: 20,
-    paddingTop: 70,
+    paddingTop: 75,
     paddingBottom: 5,  
   },
   scheduleTitle: {
     fontSize: 22,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
     color: '#333',
-    letterSpacing: 1,
   },
   statsContainer: {
     position: 'absolute',
@@ -536,8 +536,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logo: {
-    width: 30,
-    height: 30,
+    width: 45,
+    height: 45,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -545,8 +545,8 @@ const styles = StyleSheet.create({
     right: 20,
   },
   logoImage: {
-    width: '100%',
-    height: '100%',
+    width: '90%',
+    height: '90%',
   },
   weekSectionContainer: {
     paddingHorizontal: 20,
@@ -567,6 +567,7 @@ const styles = StyleSheet.create({
   weekTitle: {
     color: 'white',
     fontSize: 18,
+    fontFamily: 'Baloo2-Bold',
     fontWeight: '600',
   },
   navArrow: {
@@ -658,6 +659,7 @@ const styles = StyleSheet.create({
   },
   eventsTitle: {
     fontSize: 18,
+    fontFamily: 'Baloo2-ExtraBold',
     fontWeight: '600',
     color: '#333',
     marginBottom: 20,
@@ -707,15 +709,18 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Baloo2-ExtraBold',
     color: '#333',
     marginBottom: 2,
   },
   eventTime: {
     fontSize: 10,
+    fontFamily: 'Baloo2-Regular',
     color: '#666',
   },
   eventLocation: {
     fontSize: 9,
+    fontFamily: 'Baloo2-Regular',
     color: '#888',
     marginTop: 1,
   },
@@ -733,6 +738,7 @@ const styles = StyleSheet.create({
   registeredBadgeText: {
     color: 'white',
     fontSize: 10,
+    fontFamily: 'Baloo2-ExtraBold',
     fontWeight: 'bold',
   },
   noEventsContainer: {
@@ -742,6 +748,7 @@ const styles = StyleSheet.create({
   },
   noEventsText: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Bold',
     color: '#666',
   },
   loginPrompt: {
