@@ -26,7 +26,7 @@ export default function FilterBar({
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
-  chipActive: { backgroundColor: '#111', borderColor: '#111' },
-  label: { color: '#111', fontFamily: 'Baloo2-SemiBold' },
+  chipActive: { backgroundColor: '#0055FE', borderColor: '#0055FE' }, 
+  label: { color: '#000', fontFamily: 'Baloo2-SemiBold' },
   labelActive: { color: '#fff' },
 });

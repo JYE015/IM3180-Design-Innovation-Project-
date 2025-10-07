@@ -36,12 +36,10 @@ export default function TinderView({ events, searchQuery }) {
         </View>
       )}
       <View style={styles.cardContent}>
-        <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
+        <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
         <Text style={styles.cardDate}>
-          {dayjs(item.date).format('D MMM YYYY')}
-          {item.time && ` · ${item.time}`}
+          {dayjs(item.date).format('D MMMM YYYY')}
         </Text>
-        <Text style={styles.cardLocation} numberOfLines={1}>{item.location}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -108,12 +106,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardDate: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
-    fontFamily: 'Baloo2-Regular',
-  },
-  cardLocation: {
     fontSize: 14,
     color: '#666',
     fontFamily: 'Baloo2-Regular',
