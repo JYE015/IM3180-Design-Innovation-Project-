@@ -89,6 +89,14 @@ export default function UserProfile() {
     }
   }, []);
 
+  // First, add this helper function near the top of the file with the other helpers
+const isPastEvent = (dateStr, timeStr) => {
+  if (!dateStr) return false;
+  const iso = timeStr ? `${dateStr}T${timeStr}` : `${dateStr}T00:00:00`;
+  const eventDate = new Date(iso);
+  return eventDate < new Date();
+};
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -454,26 +462,31 @@ export default function UserProfile() {
           </TouchableOpacity>
 
           {showEvents && (
-            <View style={styles.attendedSection}>
-              {attendedEvents.length > 0 ? (
-                attendedEvents.map((row) => {
-                  const ev = row.eventData || {};
-                  const eventName = ev.Title || `Event #${row.event}`;
-                  const eventWhen = formatEventDateTime(ev.Date, ev.Time);
-                  
-                  return (
-                    <View key={row.id} style={styles.eventItem}>
-                      <Text style={styles.eventText}>{eventName}</Text>
-                      {ev.Description ? <Text style={styles.eventMeta}>{ev.Description}</Text> : null}
-                      <Text style={styles.eventDate}>Event date & time: {eventWhen}</Text>
-                    </View>
-                  );
-                })
-              ) : (
-            <Text style={styles.attendedEmpty}>No events attended yet.</Text>
-          )}
-        </View>
-      )}
+    <View style={styles.attendedSection}>
+    {attendedEvents.length > 0 ? (
+      attendedEvents
+        .filter(row => {
+          const ev = row.eventData || {};
+          return isPastEvent(ev.Date, ev.Time);
+        })
+        .map((row) => {
+          const ev = row.eventData || {};
+          const eventName = ev.Title || `Event #${row.event}`;
+          const eventWhen = formatEventDateTime(ev.Date, ev.Time);
+          
+          return (
+            <View key={row.id} style={styles.eventItem}>
+              <Text style={styles.eventText}>{eventName}</Text>
+              {ev.Description ? <Text style={styles.eventMeta}>{ev.Description}</Text> : null}
+              <Text style={styles.eventDate}>Event date & time: {eventWhen}</Text>
+            </View>
+          );
+        })
+    ) : (
+      <Text style={styles.attendedEmpty}>No past events attended.</Text>
+    )}
+  </View>
+)}
 
           <TouchableOpacity 
             style={styles.logoutBtn} 

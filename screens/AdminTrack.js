@@ -36,11 +36,19 @@ export default function EventsTrackingScreen({ route }) {
 
       if (eventError) throw eventError;
 
-      // Fetch signups for this event
+            // Fetch signups with user profile information using join
       const { data: signupsData, error: signupsError } = await supabase
         .from('attendance')
-        .select('*')
-        .eq('event', eventId);
+        .select(`
+          id,
+          created_at,
+          profiles (
+            username,
+            school,
+            course
+          )
+        `)
+        .eq('event', eventId)
 
       if (signupsError) throw signupsError;
 
@@ -152,16 +160,16 @@ export default function EventsTrackingScreen({ route }) {
                   {signups.map((signup,index) => (
                     <View key={signup.id} style={styles.attendeeRow}>
                       <Text style={styles.attendeeUser}>
-                        {index +1}) User: {signup.user.substring(0, 8)}...
+                        {index + 1} Name: {signup.profiles?.username || 'Anonymous'}
                       </Text>
                       <Text style={styles.attendeeDate}>
                         {new Date(signup.created_at).toLocaleDateString()}
                       </Text>
                       <Text style={styles.attendeeSchool}>
-                        School: {signup.school ? signup.school.substring(0, 8) : 'Not provided'}...
+                        School: {signup.profiles?.school || 'Not provided'}
                       </Text>
                       <Text style={styles.attendeeCourse}>
-                        Course: {signup.course ? signup.course.substring(0, 8) : 'Not provided'}...
+                        Course: {signup.profiles?.course || 'Not provided'}
                       </Text>
                     </View>
                   ))}
