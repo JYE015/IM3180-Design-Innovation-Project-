@@ -18,6 +18,7 @@ import { supabase } from '../lib/supabase';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import Ionicons from '@expo/vector-icons/Ionicons';
 
 const formatEventDateTime = (dateStr, timeStr) => {
   if (!dateStr) return '—';
@@ -443,11 +444,18 @@ const isPastEvent = (dateStr, timeStr) => {
           />
 
           <TouchableOpacity style={styles.saveBtn} onPress={onSave} disabled={saving} activeOpacity={0.85}>
-            {saving ? <ActivityIndicator /> : <Text style={styles.saveText}>Save Changes</Text>}
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="checkmark-circle-outline" size={24} color="#fff" />
+                <Text style={styles.saveText}>Save Changes</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.smallBtn, { marginTop: 12 }]}
+            style={styles.smallBtn}
             onPress={() => {
               if (!showEvents) fetchAttendedEvents();
               setShowEvents(!showEvents);
@@ -600,16 +608,19 @@ const styles = StyleSheet.create({
   },
 
   smallBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    marginTop: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: '#4E8EF7',
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: 'center',   
     justifyContent: 'center',
+    height: 52,
   },
   smallBtnText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 18,
     fontFamily: 'Baloo2-ExtraBold',
     textAlign: 'center', 
   },
@@ -666,8 +677,15 @@ const styles = StyleSheet.create({
   eventItem: {
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#EEF2FF',
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#C7D2FE',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   eventText: { fontFamily: 'Baloo2-ExtraBold', fontSize: 15, color: '#222' },
   eventMeta: { fontFamily: 'Baloo2-Regular',color: '#666', fontSize: 13 },

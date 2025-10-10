@@ -4,10 +4,53 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
-  FlatList,
+  SectionList,
   Image,
 } from "react-native";
-import { supabase } from "../lib/supabase"; // ✅ FIXED PATH
+import { supabase } from "../lib/supabase";
+
+// Helper function to get time category
+const getTimeCategory = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffTime = now - date;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Today
+  if (diffDays === 0) return 'Today';
+  
+  // Yesterday
+  if (diffDays === 1) return 'Yesterday';
+  
+  // This week (last 7 days)
+  if (diffDays <= 7) return 'This Week';
+  
+  // This month
+  const sameMonth = date.getMonth() === now.getMonth() && 
+                    date.getFullYear() === now.getFullYear();
+  if (sameMonth) return 'Earlier This Month';
+  
+  // This year
+  if (date.getFullYear() === now.getFullYear()) return 'Earlier This Year';
+  
+  // Older
+  return date.getFullYear().toString();
+};
+
+// Group announcements by time category
+const groupAnnouncementsByTime = (announcements) => {
+  const groups = {};
+  
+  announcements.forEach(announcement => {
+    const category = getTimeCategory(announcement.created_at);
+    if (!groups[category]) {
+      groups[category] = [];
+    }
+    groups[category].push(announcement);
+  });
+  
+  return groups;
+};
 
 export default function Announcements() {
   const [announcements, setAnnouncements] = useState([]);
@@ -70,6 +113,24 @@ export default function Announcements() {
     );
   }
 
+  // Group announcements by time
+  const groupedAnnouncements = groupAnnouncementsByTime(announcements);
+  const sections = Object.keys(groupedAnnouncements).map(category => ({
+    title: category,
+    data: groupedAnnouncements[category]
+  }));
+
+  // Sort sections by time order
+  const sectionOrder = ['Today', 'Yesterday', 'This Week', 'Earlier This Month', 'Earlier This Year'];
+  sections.sort((a, b) => {
+    const indexA = sectionOrder.indexOf(a.title);
+    const indexB = sectionOrder.indexOf(b.title);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return b.title.localeCompare(a.title); // Years in descending order
+  });
+
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
       {/* Header */}
@@ -84,20 +145,42 @@ export default function Announcements() {
         </View>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={announcements}
+      {/* List with Sections */}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.container}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.message}>{item.message}</Text>
-            <Text style={styles.date}>
-              {new Date(item.created_at).toLocaleString()}
-            </Text>
+        renderSectionHeader={({ section: { title, data } }) => (
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>{title}</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>{data.length}</Text>
+            </View>
           </View>
         )}
+        renderItem={({ item }) => {
+          const date = new Date(item.created_at);
+          const day = date.getDate();
+          const month = date.toLocaleDateString('en-GB', { month: 'short' }).toUpperCase();
+          const year = date.getFullYear();
+          
+          return (
+            <View style={styles.card}>
+              {/* Date Left Sidebar */}
+              <View style={styles.dateLeftSidebar}>
+                <Text style={styles.dateDay}>{day}</Text>
+                <Text style={styles.dateMonth}>{month}</Text>
+                <Text style={styles.dateYear}>{year}</Text>
+              </View>
+              
+              {/* Content */}
+              <View style={styles.cardContent}>
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.message}>{item.message}</Text>
+              </View>
+            </View>
+          );
+        }}
       />
     </View>
   );
@@ -137,41 +220,117 @@ const styles = StyleSheet.create({
   // Page styles
   container: {
     padding: 16,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
   center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#fff",
   },
+  
+  // Section Header
+  sectionHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,  // Space between title and badge
+    paddingTop: 8,
+    paddingBottom: 4,
+    paddingLeft: 4,
+    backgroundColor: '#fff',
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontFamily: 'Baloo2-SemiBold',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  countBadge: {
+    backgroundColor: '#d1d5db',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  countText: {
+    fontSize: 11,
+    fontFamily: 'Baloo2-SemiBold',
+    color: '#4b5563',
+  },
+  
   card: {
-    backgroundColor: "white",
+    backgroundColor: 'white',
     borderRadius: 12,
-    padding: 16,
     marginBottom: 12,
-    shadowColor: "#000",
+    marginTop: 12,
+    shadowColor: '#667eea',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 3,
+    flexDirection: 'row',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
   },
+  
+  // Date Left Sidebar
+  dateLeftSidebar: {
+    width: 75,
+    backgroundColor: '#8CBBFF',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 2,
+    borderTopLeftRadius: 12,  
+    borderBottomLeftRadius: 12,  
+  },
+  
+  dateDay: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
+    color: '#1f2937',
+    lineHeight: 34,
+    marginBottom: -14,
+  },
+  
+  dateMonth: {
+    fontSize: 14,
+    fontFamily: 'Baloo2-SemiBold',
+    color: '#4b5563',
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    marginTop: -2,
+  },
+  
+  dateYear: {
+    fontSize: 11,
+    fontFamily: 'Baloo2-SemiBold',
+    color: '#6b7280',
+    marginTop: -6,
+  },
+  
+  // Content Area
+  cardContent: {
+    flex: 1,
+    padding: 16,
+    backgroundColor: 'white',
+    borderTopRightRadius: 12,  
+  borderBottomRightRadius: 12,  
+  },
+  
   title: {
-    fontSize: 18,
-    fontFamily: "Baloo2-ExtraBold",
-    color: "#333",
-    marginBottom: 6,
-  },
-  message: {
-    fontSize: 15,
-    fontFamily: "Baloo2-Regular",
-    color: "#555",
+    fontSize: 17,
+    fontFamily: 'Baloo2-ExtraBold',
+    color: '#1f2937',
     marginBottom: 8,
+    lineHeight: 22,
   },
-  date: {
-    fontSize: 12,
-    fontFamily: "Baloo2-SemiBold",
-    color: "#888",
-    textAlign: "right",
+  
+  message: {
+    fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
+    color: '#4b5563',
+    lineHeight: 20,
   },
 });
