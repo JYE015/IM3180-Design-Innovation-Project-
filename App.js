@@ -30,6 +30,7 @@ import AdminHome from './screens/AdminHome';
 import AdminEventListItem from './components/AdminEventListItem';
 import EditEvent from './screens/EditEvent';
 import AdminEventPage from './components/AdminEventPage';
+import AdminTrack from './screens/AdminTrack';
 
 // ✅ NEW: Import Announcements
 import Announcements from './screens/Announcements';
@@ -343,7 +344,7 @@ export default function App() {
         <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ title: 'Event Tracking Details' }} />
         <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
         <Stack.Screen name="TinderView" component={TinderView} options={{ title: 'Event Home' }} />
-
+        <Stack.Screen name="AdminTrack" component={AdminTrack} options={{ title: 'Track Event' }} />
         {/* ✅ NEW: Register AdminAnnouncements screen */}
         <Stack.Screen 
           name="AdminAnnouncements" 

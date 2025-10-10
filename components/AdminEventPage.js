@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 
 export default function AdminEventPage({ route, navigation }) {
   const { event } = route.params;
-
   
   console.log("event:", event);
   console.log("event.id:", event?.id);
@@ -158,9 +157,17 @@ export default function AdminEventPage({ route, navigation }) {
           </Text>
         </View>
       </View>
-
+      
+      <TouchableOpacity
+        style={styles.trackingButton}
+        onPress={() => navigation.navigate('AdminTrack', { eventId: event.id })}  // Pass eventId to AdminTrack screen
+      >
+        <Text style={styles.trackingButtonIcon}>📊</Text>
+        <Text style={styles.trackingButtonText}>View Events Tracking</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
+   
 }
 
 
@@ -294,5 +301,30 @@ const styles = StyleSheet.create({
   studentInfo: {
     fontSize: 14,
     color: '#666',
+  },
+
+  trackingButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4E8EF7',
+    padding: 16,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  trackingButtonIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  trackingButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
