@@ -64,11 +64,13 @@ function MainTabs() {
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#4E8EF7',
-        tabBarInactiveTintColor: 'gray',
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#000000',
         tabBarStyle: {
           paddingBottom: 5,
           height: 60,
+          backgroundColor: '#B8C4FE',
+          borderTopWidth: 0, 
         },
         headerShown: false, // We'll handle headers in individual screens
       })}

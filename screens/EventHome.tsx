@@ -1,13 +1,16 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View, Image } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TextInput, View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import dayjs from 'dayjs';
 
 import EventListItem from '../components/EventListItem';
 import FilterBar, { FilterOption } from '../components/FilterBar'
 import TinderView from '../components/TinderView';
 import { supabase } from '../lib/supabase';
+
+const screenWidth = Dimensions.get('window').width;
 
 type Event = {
   id: number;
@@ -19,7 +22,15 @@ type Event = {
   deadline: string;   // mapped from Deadline
 };
 
+// Navigation types
+type RootStackParamList = {
+  EventPage: { id: number };
+};
+
+type NavigationProp = import('@react-navigation/native').NavigationProp<RootStackParamList>;
+
 export default function EventHome() {
+  const navigation = useNavigation<NavigationProp>();
   const [events, setEvents] = useState<Event[]>([]);
   const [filter, setFilter] = useState<FilterOption>('All');
   const [loading, setLoading] = useState(true);
@@ -133,24 +144,24 @@ export default function EventHome() {
     }, [filter, myEventIds])
   );
 
-    return (
+  return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.container}>
         <View style={styles.headerBackground}>
-          <View style={styles.searchRow}>
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
-              <TextInput 
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
+            <TextInput 
               style={styles.searchInput}
               placeholder='Search events...'
               value={searchQuery}
               onChangeText={setSearchQuery}
-              />
-            </View>
+            />
+          </View>
+          <View style={styles.logo}>
             <Image 
               source={require('../assets/hall1logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
+              style={styles.logoImage}
+              resizeMode="cover"
             />
           </View>
         </View>
@@ -158,29 +169,52 @@ export default function EventHome() {
           <FilterBar value={filter} onChange={setFilter} />
         </View>
 
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 20 }} />
-      ) : events.length === 0 ? (
-        <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>
-            {filter === 'My Events' ? 'No events registered' : 'No events found'}
-          </Text>
-        </View>
-      ) : filter === 'All' ? (
-        <TinderView events={events} searchQuery={searchQuery} />
-      ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}>
-          {events
-            .filter(event => 
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 20 }} />
+        ) : events.length === 0 ? (
+          <View style={styles.messageContainer}>
+            <Text style={styles.messageText}>
+              {filter === 'My Events' ? 'No events registered' : 'No events found'}
+            </Text>
+          </View>
+        ) : filter === 'All' ? (
+          <TinderView events={events} searchQuery={searchQuery} />
+        ) : (
+          <FlatList
+            data={events.filter(event => 
               searchQuery === '' || 
               event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
               event.location.toLowerCase().includes(searchQuery.toLowerCase())
-            )
-            .map(e => (
-              <EventListItem key={e.id} event={e} />
-            ))}
-        </ScrollView>
-      )}
+            )}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={styles.gridCard}
+                onPress={() => navigation.navigate('EventPage', { id: item.id })}
+              >
+                {item.image_url ? (
+                  <Image 
+                    source={{ uri: item.image_url }} 
+                    style={styles.cardImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={[styles.cardImage, styles.placeholderImage]}>
+                    <Text style={styles.placeholderText}>No Image</Text>
+                  </View>
+                )}
+                <View style={styles.cardContent}>
+                  <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
+                  <Text style={styles.cardDate}>
+                    {dayjs(item.date).format('D MMMM YYYY')}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            keyExtractor={item => item.id.toString()}
+            numColumns={2}
+            contentContainerStyle={styles.gridContainer}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -191,7 +225,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#B8C4FE',
   },
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { 
+    flex: 1, 
+    backgroundColor: '#fff' 
+  },
   messageContainer: { 
     flex: 1, 
     justifyContent: 'center', 
@@ -204,13 +241,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Baloo2-Regular'
   },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
   searchContainer: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
@@ -218,6 +249,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
     paddingHorizontal: 12,
+    marginRight: 60,
   },
   searchIcon: {
     marginRight: 8,
@@ -231,12 +263,70 @@ const styles = StyleSheet.create({
   logo: {
     width: 45,
     height: 45,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'absolute',
+    right: 20,
+    top: 5,
+  },
+  logoImage: {
+    width: '90%',
+    height: '90%',
   },
   headerBackground: {
-  backgroundColor: '#B8C4FE',
-  paddingHorizontal: 16,
-  paddingTop: 12,
-  paddingBottom: 16,
-  marginBottom: 12,
-  }
+    backgroundColor: '#B8C4FE',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
+    marginBottom: 12,
+  },
+  gridContainer: {
+    padding: 8,
+  },
+  gridCard: {
+    flex: 1,
+    margin: 8,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    maxWidth: (screenWidth - 48) / 2,
+  },
+  cardImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  placeholderImage: {
+    backgroundColor: '#e1e1e1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: '#999',
+    fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
+  },
+  cardContent: {
+    padding: 12,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontFamily: 'Baloo2-ExtraBold',
+    marginBottom: 4,
+    color: '#000',
+  },
+  cardDate: {
+    fontSize: 13,
+    color: '#666',
+    fontFamily: 'Baloo2-Regular',
+  },
 });
