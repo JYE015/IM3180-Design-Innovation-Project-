@@ -20,6 +20,7 @@ type Event = {
   location: string;   // mapped from Location
   image_url: string;  // mapped from image_url
   deadline: string;   // mapped from Deadline
+  tags: string;
 };
 
 // Navigation types
@@ -57,6 +58,11 @@ export default function EventHome() {
     if (filter === 'Past')     query = query.lt('Date', today);
     if (filter === 'Online')   query = query.ilike('Location', '%online%');
     if (filter === 'In-person')query = query.not('Location', 'ilike', '%online%');
+
+// Tag filtering - will match if the tag appears anywhere in the Tags field
+  if (['Workshop', 'Academics', 'Welfare', 'FOC', 'Residential Affairs'].includes(filter)) {
+    query = query.ilike('Tags', `%${filter}%`);
+  }
     
     // Special handling for "My Events" filter which requires post-fetch filtering
     let isMyEventsFilter = filter === 'My Events';
@@ -79,6 +85,7 @@ export default function EventHome() {
       location: r.Location,
       image_url: r.image_url ?? '',
       deadline: r.Deadline || '',  // Add deadline field
+      tags: r.Tags || ''
     }));
 
     // If "My Events" filter is active, only show events the user has registered for

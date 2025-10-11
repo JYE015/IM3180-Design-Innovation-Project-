@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   Image, 
   TouchableOpacity, 
-  Dimensions 
+  Dimensions,
+  ScrollView 
 } from 'react-native';
 import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
@@ -47,12 +48,29 @@ export default function TinderView({ events, searchQuery }) {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
+    >
+                             {currentEvent?.tags && (
+  <View style={styles.tagsContainer}>
+    {currentEvent.tags.split(',').map((tag, index) => (
+      <View 
+        key={index} 
+        style={[styles.hotBadge]}
+      >
+        <Text style={styles.hotText}>{tag.trim()}</Text>
+      </View>
+    ))}
+  </View>
+)}
       <TouchableOpacity 
         style={styles.card}
-        onPress={() => navigation.navigate('EventPage', { id: currentEvent.id })}
+        onPress={() => navigation.navigate('EventPage', { id: currentEvent.id, returnToEventId: currentEvent.id })}
         activeOpacity={0.9}
       >
+        
         {currentEvent.image_url ? (
           <Image 
             source={{ uri: currentEvent.image_url }} 
@@ -64,11 +82,6 @@ export default function TinderView({ events, searchQuery }) {
             <Text style={styles.placeholderText}>No Image</Text>
           </View>
         )}
-        
-        {/* Hot Badge - Optional, remove if not needed */}
-        <View style={styles.hotBadge}>
-          <Text style={styles.hotText}>HOT🔥</Text>
-        </View>
 
         {/* Navigation Arrows */}
         {currentIndex > 0 && (
@@ -112,7 +125,7 @@ export default function TinderView({ events, searchQuery }) {
           {currentIndex + 1} / {filteredEvents.length}
         </Text>
       </View>
-    </View>
+      </ScrollView>
   );
 }
 
@@ -161,22 +174,6 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 18,
     fontFamily: 'Baloo2-Regular',
-  },
-  hotBadge: {
-    position: 'absolute',
-    top: 15,
-    left: 15,
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    elevation: 3,
-  },
-  hotText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-    fontFamily: 'Baloo2-ExtraBold',
   },
   navButton: {
     position: 'absolute',
@@ -233,4 +230,28 @@ const styles = StyleSheet.create({
     color: '#666',
     fontFamily: 'Baloo2-SemiBold',
   },
+   tagsContainer: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    flexDirection: 'row', // Make tags appear in a row
+    flexWrap: 'wrap',    // Allow wrapping if too many tags
+    zIndex: 999,
+    gap: 8,             // Add space between tags
+  },
+  hotBadge: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    elevation: 3,
+  },
+  hotText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo2-ExtraBold',
+  },
+  // You can remove tagBadge and tagText styles since we're not using them
+
 });

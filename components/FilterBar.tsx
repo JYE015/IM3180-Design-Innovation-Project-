@@ -1,32 +1,86 @@
-// components/FilterBar.tsx
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View 
+} from 'react-native';
 
-const OPTIONS = ['All', 'My Events', 'Upcoming', 'Past', 'Online', 'In-person'] as const;
+const OPTIONS = [
+   'All', 
+  'My Events', 
+  'Upcoming', 
+  'Past', 
+  'Online', 
+  'In-person', 
+  'Workshop', 
+  'Academics', 
+  'Welfare', 
+  'FOC'
+] as const;
+
 export type FilterOption = typeof OPTIONS[number];
 
 export default function FilterBar({
   value,
   onChange,
-}: { value: FilterOption; onChange: (v: FilterOption) => void }) {
+}: { 
+  value: FilterOption; 
+  onChange: (v: FilterOption) => void 
+}) {
   return (
-    <View style={styles.row}>
-      {OPTIONS.map(opt => (
-        <Pressable
-          key={opt}
-          onPress={() => onChange(opt)}
-          style={[styles.chip, value === opt && styles.chipActive]}
+    <ScrollView 
+      horizontal 
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.container}
+    >
+      {OPTIONS.map((option) => (
+        <TouchableOpacity
+          key={option}
+          style={[
+            styles.filterButton,
+            value === option && styles.selectedButton
+          ]}
+          onPress={() => onChange(option)}
         >
-          <Text style={[styles.label, value === opt && styles.labelActive]}>{opt}</Text>
-        </Pressable>
+          <Text 
+            style={[
+              styles.filterText,
+              value === option && styles.selectedText
+            ]}
+          >
+            {option}
+          </Text>
+        </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
-  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1, borderColor: '#ddd' },
-  chipActive: { backgroundColor: '#0055FE', borderColor: '#0055FE' }, 
-  label: { color: '#000', fontFamily: 'Baloo2-SemiBold' },
-  labelActive: { color: '#fff' },
+  container: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  filterButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  selectedButton: {
+    backgroundColor: '#0055FE',
+  },
+  filterText: {
+    fontSize: 14,
+    fontFamily: 'Baloo2-Medium',
+    color: '#666',
+  },
+  selectedText: {
+    color: '#ffffffff',
+    fontFamily: 'Baloo2-SemiBold',
+  },
 });
