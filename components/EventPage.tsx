@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Tex
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
 
 type Event = {
   id: number;
@@ -296,192 +297,240 @@ const isDeadlinePassed = useCallback(() => {
 
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!event) {
     return (
-      <SafeAreaView style={{ padding: 16 }}>
+      <View style={{ padding: 16 }}>
         <Text>Event not found</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-        <ScrollView>
+    <View style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView style={{ flex: 1 }} bounces={false}>
+        {!!event.image_url && (
+          <Image source={{ uri: event.image_url }} style={styles.image} />
+        )}
+        
+        <View style={styles.contentContainer}>
           <View style={styles.eventContainer}>
-            {!!event.image_url && <Image source={{ uri: event.image_url }} style={styles.image} />}
-            <Text style={[styles.text, styles.title]}>{event.Title}</Text>
-            <Text style={[styles.text, styles.details]}>
-              {dayjs(event.Date).isValid()
-                ? `${dayjs(event.Date).format('ddd, D MMM YYYY')} · ${event.Time || ''}`
-                : 'Date TBA'}
+            <Text style={styles.title}>{event.Title}</Text>
+            
+            <Text style={styles.dateTime}>
+              {dayjs(event.Date).format('ddd, D MMM YYYY')}
+              {event.Time ? ` · ${event.Time}` : ''}
             </Text>
-            {!!event.Description && <Text style={[styles.text]}>{event.Description}</Text>}
-            <Text style={[styles.text]}>Deadline:  
-              {dayjs(event.Deadline).isValid()
-                ? `${dayjs(event.Deadline).format('ddd, D MMM YYYY')}`
-                : 'Date TBA'}
-            </Text>
-            <Text style={[styles.text]}>📍 {event.Location}</Text>
-            {!!event.Tags && <Text style={[styles.text]}>Tags: {event.Tags}</Text>}
-            <Text style={[styles.text]}>
+          
+          <View style={styles.locationContainer}>
+              <Ionicons name="location" size={24} color="#666" />
+              <Text style={styles.locationText}>{event.Location}</Text>
+            </View>
+
+            <Text style={styles.maxParticipants}>
               Maximum Participants: {event.MaximumParticipants ?? 'NA'}
             </Text>
-          </View>
-        </ScrollView>
 
-        <View style={styles.footer}>
-          <Text style={[styles.text, { fontSize: 18 }]}>Free</Text>
-          {/* Force isRegistered state as the source of truth, not just attendance object */}
-          {isRegistered ? (
-            <View style={styles.registrationStatusContainer}>
-              <View style={styles.registeredButton}>
-                <Text style={[styles.details, { fontSize: 17, color: 'white' }]}>RSVP'd</Text>
-              </View>
-              <Pressable
-                style={[styles.cancelButton, registering && styles.disabledButton]}
-                onPress={cancelRSVP}
-                disabled={registering}
-              >
-                {registering ? (
-                  <ActivityIndicator color="white" size="small" />
-                ) : (
-                  <Text style={[styles.details, { fontSize: 15, color: 'white' }]}>Cancel</Text>
-                )}
-              </Pressable>
+            <View style={styles.separator} />
+
+            <Text style={styles.sectionTitle}>Details</Text>
+            {!!event.Description && (
+              <Text style={styles.description}>{event.Description}</Text>
+            )}
+          
+          <View style={styles.separator} />
+
+            <Text style={styles.sectionTitle}>Register by:</Text>
+            <View style={styles.countdown}>
+              <Text style={styles.countdownText}>
+                {dayjs(event.Deadline).format('DD:HH:mm')}
+              </Text>
+              <Text style={styles.countdownLabel}>Days Hours Mins</Text>
             </View>
-          ) : isEventFull ? (
-            // Show "Event Full" button when the event is at capacity
-            <View style={styles.fullButton}>
-              <Text style={[styles.details, { fontSize: 17, color: 'white' }]}>Event Full :( </Text>
-            </View>
-          ) : isDeadlinePassed() ? (
-            // Show "Event Full" button when the event is at capacity
-            <View style={styles.fullButton}>
-              <Text style={[styles.details, { fontSize: 17, color: 'white' }]}>Closed</Text>
-            </View>
-          ) : (
-            // Regular RSVP button
-            <Pressable
-              style={[
-                styles.rsvpButton,
-                registering && styles.disabledButton
-              ]}
-              onPress={joinEvent}
-              disabled={registering || !currentUser || isEventFull}
-            >
-              {registering ? (
-                <ActivityIndicator color="white" size="small" />
-              ) : (
-                <Text style={[styles.details, { fontSize: 17, color: 'black' }]}>Join and RSVP!</Text>
-              )}
-            </Pressable>
-          )}
+          </View>
         </View>
+      </ScrollView>
+      
+      <View style={styles.footer}>
+        <Text style={styles.priceText}>Free</Text>
+        
+        {isRegistered ? (
+          <>
+            <View style={styles.registeredButton}>
+              <Text style={styles.buttonText}>Registered</Text>
+            </View>
+            <Pressable
+              style={[styles.cancelButton, registering && styles.disabledButton]}
+              onPress={cancelRSVP}
+              disabled={registering}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </Pressable>
+          </>
+        ) : isEventFull ? (
+          <View style={styles.fullButton}>
+            <Text style={styles.buttonText}>Event Full</Text>
+          </View>
+        ) : isDeadlinePassed() ? (
+          <View style={styles.fullButton}>
+            <Text style={styles.buttonText}>Closed</Text>
+          </View>
+        ) : (
+          <Pressable
+            style={[styles.rsvpButton, registering && styles.disabledButton]}
+            onPress={joinEvent}
+            disabled={registering || !currentUser || isEventFull}
+          >
+            <Text style={styles.rsvpButtonText}>Register Now</Text>
+          </Pressable>
+        )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-
-    eventContainer: {
-    backgroundColor: '#ffffff',
-    padding: 3,
-    flex: 1
-    },
-
-    details: {
-    fontSize: 15,
-    color: '#676767ff',
-    fontWeight: 'bold',
-    marginVertical: 8,
-    marginHorizontal: 5,
-    textTransform: 'uppercase'
+  contentContainer: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    marginTop: -20, // Overlap with image
   },
-
-  text: {
-    fontSize: 16,
+  image: {
+    width: '100%',
+    height: 300,
+    resizeMode: 'cover',
+  },
+  eventContainer: {
+    padding: 16,
+    paddingTop: 24,
+  },
+  title: {
+    fontSize: 28,
     color: '#000',
-    fontWeight: '500',
-    marginHorizontal: 5,
+    marginBottom: 8,
+    fontFamily: 'Baloo2-Bold',
   },
-
-    title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    marginVertical: 5,
-    marginHorizontal: 5,
+  dateTime: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 16,
+    fontFamily: 'Baloo2-Regular',
   },
-
-
-    image: {
-    width: '100%',    // Takes full width of parent container
-    height: 150,      // Fixed height
-    borderRadius: 10,
-    resizeMode: 'cover',  // Ensures image fills the space
-  },
-
-  footer: {
+  locationContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    borderTopWidth: 3,
-    borderTopColor: '#abababff',
+    marginBottom: 12,
   },
-
+  locationText: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
+    fontFamily: 'Baloo2-Regular',
+  },
+  maxParticipants: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+    fontFamily: 'Baloo2-Regular',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: '#E5E5E5',
+    marginVertical: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    color: '#000',
+    marginBottom: 8,
+    fontFamily: 'Baloo2-Bold',
+  },
+  description: {
+    fontSize: 16,
+    color: '#333',
+    lineHeight: 24,
+    fontFamily: 'Baloo2-Regular',
+  },
+  countdown: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  countdownText: {
+    fontSize: 32,
+    color: '#000',
+    fontFamily: 'Baloo2-Bold',
+  },
+  countdownLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
+    fontFamily: 'Baloo2-Regular',
+  },
+  footer: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+    backgroundColor: 'white',
+  },
+  priceText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 16,
+    fontFamily: 'Baloo2-Bold',
+  },
   rsvpButton: {
-    padding: 12,
+    backgroundColor: '#0055FE',
+    padding: 16,
     borderRadius: 8,
-    backgroundColor: 'pink',
-    minWidth: 120,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-
   registeredButton: {
-    padding: 12,
+    backgroundColor: '#9CA2AA',
+    padding: 16,
     borderRadius: 8,
-    backgroundColor: '#4CAF50',  // Green color for registered state
-    minWidth: 120,
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 8,
   },
-
-  disabledButton: {
-    backgroundColor: '#cccccc',  // Gray color for disabled state
-    opacity: 0.7,
-  },
-
-  registrationStatusContainer: {
-    alignItems: 'center',
-  },
-
   cancelButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: '#ff5252',  // Red color for cancel button
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  fullButton: {
+    backgroundColor: 'white',
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#808080',  // Gray color for full event state
-    minWidth: 120,
     alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#0055FE',
+  },
+  fullButton: {
+    backgroundColor: '#808080',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
     opacity: 0.9,
   },
-
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
+  },
+  rsvpButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
+  },
+  cancelButtonText: {
+    color: '#0055FE',
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
 });
