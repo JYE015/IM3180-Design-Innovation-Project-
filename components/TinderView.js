@@ -7,8 +7,6 @@ import {
   TouchableOpacity, 
   Dimensions,
   Animated,
-  PanResponder,
-  Button
 } from 'react-native';
 import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
@@ -25,7 +23,7 @@ export default function TinderView({ events, searchQuery }) {
   
   // Animation values for swipe and card stacking
   const position = useRef(new Animated.Value(0)).current;
-  const rotation = useRef(new Animated.Value(0)).current;  // Added rotation for better visual feedback
+  const rotation = useRef(new Animated.Value(0)).current;
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(1)).current;
   const nextCardScale = useRef(new Animated.Value(0.9)).current;
@@ -37,15 +35,39 @@ export default function TinderView({ events, searchQuery }) {
   const touchEnd = useRef({ x: 0, y: 0 });
   const isSwiping = useRef(false);
   
-  // Filter events when search query changes
+    // Filter events when search query changes - now also filters for upcoming events
   useEffect(() => {
-    const filtered = events.filter(event => 
-      searchQuery === '' || 
-      event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.location?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const today = dayjs().startOf('day');
+    
+    // Filter for both upcoming events AND search query
+    const filtered = events.filter(event => {
+      // First check if it's an upcoming event (date is today or in future)
+      const eventDate = dayjs(event.date);
+      const isUpcoming = eventDate.isAfter(today) || eventDate.isSame(today, 'day');
+      
+      // Then check if it matches search query
+      const matchesSearch = searchQuery === '' || 
+        event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        event.location?.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Only return true if both conditions are met
+      return isUpcoming && matchesSearch;
+    });
+    
+    // Sort by date (closest upcoming first)
+    filtered.sort((a, b) => {
+      return dayjs(a.date).diff(dayjs(b.date));
+    });
+    
     setFilteredEvents(filtered);
   }, [events, searchQuery]);
+  
+  // Handle edge cases after filtering
+  useEffect(() => {
+    if (filteredEvents.length > 0 && currentIndex >= filteredEvents.length) {
+      setCurrentIndex(0);
+    }
+  }, [filteredEvents]);
   
   // Handle edge cases after filtering
   useEffect(() => {
@@ -74,22 +96,22 @@ export default function TinderView({ events, searchQuery }) {
       Animated.parallel([
         Animated.timing(position, {
           toValue: -screenWidth,
-          duration: 300,
+          duration: 100,
           useNativeDriver: true
         }),
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 300,
+          duration: 81,
           useNativeDriver: true
         }),
         Animated.timing(nextCardScale, {
           toValue: 1,
-          duration: 300,
+          duration: 10,
           useNativeDriver: true
         }),
         Animated.timing(nextCardOpacity, {
           toValue: 1,
-          duration: 300,
+          duration: 81,
           useNativeDriver: true
         })
       ]).start(() => {
@@ -111,12 +133,12 @@ export default function TinderView({ events, searchQuery }) {
       Animated.parallel([
         Animated.timing(position, {
           toValue: screenWidth,
-          duration: 300,
+          duration: 150,
           useNativeDriver: true
         }),
         Animated.timing(opacity, {
           toValue: 0,
-          duration: 300,
+          duration: 100,
           useNativeDriver: true
         })
       ]).start(() => {
@@ -176,7 +198,7 @@ export default function TinderView({ events, searchQuery }) {
         // Animate the rest of the way off screen
         Animated.timing(position, {
           toValue: -screenWidth,
-          duration: 200,
+          duration: 20,
           useNativeDriver: true
         }).start(() => {
           navigateToNext(true);
@@ -185,7 +207,7 @@ export default function TinderView({ events, searchQuery }) {
         // Right swipe - previous card
         Animated.timing(position, {
           toValue: screenWidth,
-          duration: 200,
+          duration: 20,
           useNativeDriver: true
         }).start(() => {
           navigateToPrevious(true);
@@ -219,7 +241,7 @@ export default function TinderView({ events, searchQuery }) {
       }),
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 200,
+        duration: 50,
         useNativeDriver: true
       })
     ]).start();
@@ -467,7 +489,7 @@ const styles = StyleSheet.create({
     height: 500,
     borderRadius: 20,
     backgroundColor: 'white',
-    shadowColor: '#000',
+    shadowColor: '#000000ff',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -501,36 +523,6 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: 'rgba(0,0,0,0.05)',
-  },
-  debugInfo: {
-    marginTop: 15,
-    backgroundColor: '#f0f0f0',
-    padding: 10,
-    borderRadius: 5,
-  },
-  debugText: {
-    fontSize: 12,
-    color: '#333',
-    textAlign: 'center',
-  },
-  nextCard: {
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  swipeHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-  },
-  swipeHintText: {
-    color: '#666',
-    marginHorizontal: 10,
-    fontSize: 14,
   },
   cardImage: {
     width: '100%',
@@ -609,7 +601,6 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 32,
-    backgroundColor: 'transparent', // Remove white background
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: 'transparent',

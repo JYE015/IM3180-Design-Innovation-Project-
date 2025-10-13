@@ -1,10 +1,14 @@
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
 import { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, Alert, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import Timer from './Timer';
+
+// Initialize dayjs duration plugin
+dayjs.extend(duration);
 
 type Event = {
   id: number;
@@ -347,10 +351,7 @@ const isDeadlinePassed = useCallback(() => {
 
             <Text style={styles.sectionTitle}>Register by:</Text>
             <View style={styles.countdown}>
-              <Text style={styles.countdownText}>
-                {dayjs(event.Deadline).format('DD:HH:mm')}
-              </Text>
-              <Text style={styles.countdownLabel}>Days Hours Mins</Text>
+              <Timer targetDate={event.Deadline} />
             </View>
           </View>
         </View>
@@ -459,17 +460,6 @@ const styles = StyleSheet.create({
   countdown: {
     marginTop: 8,
     alignItems: 'center',
-  },
-  countdownText: {
-    fontSize: 32,
-    color: '#000',
-    fontFamily: 'Baloo2-Bold',
-  },
-  countdownLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 4,
-    fontFamily: 'Baloo2-Regular',
   },
   footer: {
     padding: 16,
