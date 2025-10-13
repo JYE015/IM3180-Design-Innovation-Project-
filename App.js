@@ -343,7 +343,7 @@ export default function App() {
         <Stack.Screen name="AdminPage" component={CreateEvent} options={{ title: 'Event Details' }} />
         <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: 'Admin Home' }} />
         <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
-        <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ title: 'Event Tracking Details' }} />
+        <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ headerShown: false }} />
         <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
         <Stack.Screen name="TinderView" component={TinderView} options={{ title: 'Event Home' }} />
         <Stack.Screen name="AdminTrack" component={AdminTrack} options={{ title: 'Track Event' }} />

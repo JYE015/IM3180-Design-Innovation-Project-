@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import dayjs from 'dayjs';
-
 
 export default function AdminEventPage({ route, navigation }) {
   const { event } = route.params;
@@ -14,24 +13,25 @@ export default function AdminEventPage({ route, navigation }) {
   console.log("event.id:", event?.id);
 
   const [evt, setEvt] = useState(event);
+  const [fullEventData, setFullEventData] = useState(null);
   const [signups, setSignups] = useState({
     CurrentParticipants: 0,
     MaximumParticipants: event?.MaximumParticipants ?? 0,
   });
   const [loading, setLoading] = useState(true);
 
-  
   const fetchEventDetails = async () => {
     if (!event?.id) return;
     try {
       const { data, error } = await supabase
         .from('Events')
-        .select('id, Title, Date, Time, image_url, MaximumParticipants')
+        .select('*')
         .eq('id', event.id)
         .single();
 
       if (error) throw error;
 
+      setFullEventData(data);
       setEvt({
         id: data.id,
         title: data.Title,
@@ -39,12 +39,15 @@ export default function AdminEventPage({ route, navigation }) {
         time: data.Time,
         image_url: data.image_url,
         MaximumParticipants: data.MaximumParticipants,
+        description: data.Description,
+        location: data.Location,
+        tags: data.Tags,
+        deadline: data.Deadline,
       });
 
       setSignups((prev) => ({
-        CurrentParticipants: prev.CurrentParticipants ?? 0,
-        MaximumParticipants:
-          data.MaximumParticipants ?? prev.MaximumParticipants ?? 0,
+        CurrentParticipants: data.CurrentParticipants ?? 0,
+        MaximumParticipants: data.MaximumParticipants ?? 0,
       }));
     } catch (err) {
       console.error('Error fetching event details:', err);
@@ -58,7 +61,7 @@ export default function AdminEventPage({ route, navigation }) {
       const { data, error } = await supabase
         .from('Events')
         .select('CurrentParticipants, MaximumParticipants')
-        .eq('id', event.id)   // ← use event.id from props
+        .eq('id', event.id)
         .single();  
 
       if (error) throw error;
@@ -77,100 +80,141 @@ export default function AdminEventPage({ route, navigation }) {
     }, [event?.id])
   );
 
-  const formatDate = (date, time) => {
+  const formatDate = (date) => {
     if (!date) return '';
-    const formattedDate = dayjs(date).format('DD MMM YYYY');
-    
-    if (!time) return formattedDate;
-    
-    // Handle time with or without seconds (HH:MM:SS or HH:MM)
+    return dayjs(date).format('DD MMM YYYY');
+  };
+
+  const formatTime = (time) => {
+    if (!time) return '';
     const timeParts = time.split(':');
     const hours = parseInt(timeParts[0], 10);
     const minutes = parseInt(timeParts[1], 10);
-    
     const period = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
-    const formattedTime = `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
-    
-    return `${formattedDate}, ${formattedTime}`;
+    return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+      <ScrollView>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="#111827" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Event Details</Text>
+          <TouchableOpacity 
+            style={styles.editButton}
+            onPress={() => {
+              if (!evt?.id) return;
+              navigation.navigate('EditEvent', { 
+                eventId: evt.id,
+                onUpdated: async () => {       
+                  await fetchEventDetails();
+                  await fetchSignups();
+                }
+              });
+            }}
+          >
+            <Ionicons name="create-outline" size={24} color="#3B82F6" />
+          </TouchableOpacity>
+        </View>
 
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>TRACKER</Text>
-        <TouchableOpacity 
-          style={styles.editButton}
-          onPress={() => {
-            if (!evt?.id) return;
-            navigation.navigate('EditEvent', { 
-              eventId: evt.id,
-              onUpdated: async () => {       
-                await fetchEventDetails();
-                await fetchSignups();
-              }
-            });
-          }}
-        >
-          <Ionicons name="create-outline" size={24} color="#000" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Event Title and Date */}
-      <View style={styles.eventHeader}>
-        <Text style={styles.eventTitle}>{evt?.title}</Text>
-        <Text style={styles.eventDate}>
-          {formatDate(evt?.date, evt?.time)}
-        </Text>
-      </View>
-
-
-      {/* Image */}
-      <View style={styles.statsCard}>
+        {/* Event Image */}
         {evt?.image_url ? (
           <Image
             source={{ uri: evt.image_url }}
-            style={styles.image}
+            style={styles.eventImage}
+            resizeMode="cover"
           />
         ) : (
-          <View style={[styles.image, { justifyContent: 'center', alignItems: 'center' }]}>
-            <Text style={{ color: '#999' }}>No image</Text>
+          <View style={[styles.eventImage, styles.placeholderImage]}>
+            <Ionicons name="image-outline" size={48} color="#9CA3AF" />
+            <Text style={styles.placeholderText}>No image</Text>
           </View>
         )}
-      </View>
 
-      {/* Stats Card */}
-      <View style={styles.statsCard}>
-        <Text style={styles.statsTitle}>Number of Signups</Text>
-        <View style={styles.statsNumbers}>
-          <Text style={styles.currentNumber}>{signups.CurrentParticipants || 0}</Text>
-          <Text style={styles.divider}>/</Text>
-          <Text style={styles.maxNumber}>
-            {signups.MaximumParticipants || evt?.MaximumParticipants || 0}
-          </Text>
+        {/* Event Content */}
+        <View style={styles.contentContainer}>
+          {/* Title */}
+          <Text style={styles.eventTitle}>{evt?.title}</Text>
+
+          {/* Tags */}
+          {evt?.tags && (
+            <View style={styles.tagsContainer}>
+              {evt.tags.split(',').map((tag, idx) => (
+                <View key={idx} style={styles.tag}>
+                  <Text style={styles.tagText}>{tag.trim()}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Date & Time */}
+          <View style={styles.detailRow}>
+            <Ionicons name="calendar-outline" size={20} color="#6B7280" />
+            <Text style={styles.detailText}>
+              {formatDate(evt?.date)} at {formatTime(evt?.time)}
+            </Text>
+          </View>
+
+          {/* Location */}
+          <View style={styles.detailRow}>
+            <Ionicons name="location-outline" size={20} color="#6B7280" />
+            <Text style={styles.detailText}>{evt?.location}</Text>
+          </View>
+
+          {/* Deadline */}
+          <View style={styles.detailRow}>
+            <Ionicons name="time-outline" size={20} color="#6B7280" />
+            <Text style={styles.detailText}>
+              Deadline: {formatDate(evt?.deadline)}
+            </Text>
+          </View>
+
+          {/* Description */}
+          <View style={styles.descriptionContainer}>
+            <Text style={styles.descriptionTitle}>About this event</Text>
+            <Text style={styles.descriptionText}>{evt?.description || 'No description available'}</Text>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.divider} />
+
+          {/* Signup Stats */}
+          <View style={styles.statsContainer}>
+            <Text style={styles.statsTitle}>Registration Status</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{signups.CurrentParticipants || 0}</Text>
+                <Text style={styles.statLabel}>Registered</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{signups.MaximumParticipants || 'Unlimited'}</Text>
+                <Text style={styles.statLabel}>Max Capacity</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* View Attendees Button */}
+          <TouchableOpacity
+            style={styles.attendeesButton}
+            onPress={() => navigation.navigate('AdminTrack', { eventId: event.id })}
+          >
+            <Ionicons name="people" size={24} color="#fff" />
+            <Text style={styles.attendeesButtonText}>View Attendees</Text>
+            <Ionicons name="chevron-forward" size={24} color="#fff" />
+          </TouchableOpacity>
         </View>
-      </View>
-      
-      <TouchableOpacity
-        style={styles.trackingButton}
-        onPress={() => navigation.navigate('AdminTrack', { eventId: event.id })}  // Pass eventId to AdminTrack screen
-      >
-        <Text style={styles.trackingButtonIcon}>📊</Text>
-        <Text style={styles.trackingButtonText}>View Events Tracking</Text>
-      </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
-   
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -184,147 +228,145 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#fff',
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
   },
   editButton: {
     padding: 8,
   },
-  eventHeader: {
-    backgroundColor: '#e6f3ff',
-    padding: 16,
-    borderRadius: 8,
-    margin: 16,
+  eventImage: {
+    width: '100%',
+    height: 250,
+    backgroundColor: '#F3F4F6',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  placeholderText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  contentContainer: {
+    padding: 20,
   },
   eventTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#000',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 16,
   },
-  eventDate: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 4,
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
   },
-  statsCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    margin: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+  tag: {
+    backgroundColor: '#DBEAFE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  tagText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#1E40AF',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  detailText: {
+    fontSize: 15,
+    color: '#374151',
+    marginLeft: 12,
+    flex: 1,
+  },
+  descriptionContainer: {
+    marginTop: 20,
+    marginBottom: 24,
+  },
+  descriptionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 8,
+  },
+  descriptionText: {
+    fontSize: 15,
+    color: '#6B7280',
+    lineHeight: 24,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 20,
+  },
+  statsContainer: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
   },
   statsTitle: {
     fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-  },
-   image: {
-    width: '100%',    // Takes full width of parent container
-    height: 150,      // Fixed height
-    borderRadius: 10,
-    resizeMode: 'cover',  // Ensures image fills the space
-},
-  statsNumbers: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  currentNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  divider: {
-    fontSize: 32,
-    color: '#666',
-    marginHorizontal: 8,
-  },
-  maxNumber: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#666',
-  },
-  signupsList: {
-    flex: 1,
-    margin: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#374151',
     marginBottom: 16,
+    textAlign: 'center',
   },
-  scrollView: {
-    flex: 1,
-  },
-  signupCard: {
+  statsRow: {
     flexDirection: 'row',
-    backgroundColor: '#f0f7ff',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4E8EF7',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    justifyContent: 'space-around',
   },
-  avatarText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  signupDetails: {
+  statItem: {
+    alignItems: 'center',
     flex: 1,
   },
-  studentName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+  statNumber: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#3B82F6',
+    marginBottom: 4,
   },
-  studentInfo: {
+  statLabel: {
     fontSize: 14,
-    color: '#666',
+    color: '#6B7280',
   },
-
-  trackingButton: {
+  statDivider: {
+    width: 1,
+    height: 40,
+    backgroundColor: '#E5E7EB',
+  },
+  attendeesButton: {
+    backgroundColor: '#3B82F6',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4E8EF7',
-    padding: 16,
-    borderRadius: 8,
-    marginHorizontal: 16,
-    marginTop: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+    shadowColor: '#3B82F6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  trackingButtonIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  trackingButtonText: {
-    color: '#FFFFFF',
+  attendeesButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#fff',
   },
 });
