@@ -60,7 +60,7 @@ export default function EventHome() {
     if (filter === 'In-person')query = query.not('Location', 'ilike', '%online%');
 
 // Tag filtering - will match if the tag appears anywhere in the Tags field
-  if (['Workshop', 'Academics', 'Welfare', 'FOC', 'Residential Affairs'].includes(filter)) {
+  if (["Workshop", "Academic",  "Sports","Cultural","Welfare","FOC", "Residential Affairs"].includes(filter)) {
     query = query.ilike('Tags', `%${filter}%`);
   }
     

@@ -15,6 +15,16 @@ import {
 import {supabase} from "../lib/supabase";
 import { Calendar } from 'react-native-calendars';
 
+// Tags definition
+const AvailableTags = [
+  "Workshop",
+  "Academic",
+  "Sports",
+  "Cultural",
+  "Welfare",
+  "FOC",
+  "Residential Affairs"];
+// Time Picker Modal Component
 const TimePickerModal = ({ visible, selectedTime, onTimeSelect, onClose, title = "Select Time" }) => {
   const parseTime = (timeStr) => {
     if (!timeStr) return { hour: 12, minute: 0, period: 'PM' };
@@ -209,7 +219,12 @@ export default function EditEvent({ route, navigation }) {
     const [uploadingImage, setUploadingImage] = useState(false);
     const [fetchingEvent, setFetchingEvent] = useState(true);
     const [originalImageUri, setOriginalImageUri] = useState("");
-
+    
+    // Tag States
+    const [showTagsDropdown, setShowTagsDropdown] = useState(false);
+    const [selectedTags, setSelectedTags] = useState([]);
+  
+    
     // Fetching Existing Data
     useEffect(() => {
         fetchEventData();
@@ -247,14 +262,20 @@ const fetchEventData = async () => {
             });
 
             setOriginalImageUri(data.image_url || "");
+            
+            // Parse tags into array
+            if (data.Tags) {
+              const parsedTags = data.Tags.split(', ').map(tag => tag.trim()).filter(tag => tag);
+              setSelectedTags(parsedTags);
+            }
           }
-        } catch (error) {
-            console.error("Unexpected error", error);
-            Alert.alert("Error", "Failed to fetch event data.");
-            navigation.goBack();
-        } finally {
-            setFetchingEvent(false);
-        }
+      } catch (error) {
+          console.error("Unexpected error", error);
+          Alert.alert("Error", "Failed to fetch event data.");
+          navigation.goBack();
+      } finally {
+          setFetchingEvent(false);
+      }
     };
 
     // Handling Input Changes
@@ -279,6 +300,25 @@ const fetchEventData = async () => {
       handleInputChange("time", time);
     };
     
+    // Toggle Function
+   const toggleTag = (tag) => {
+      setSelectedTags((prev) => {
+        let newTags;
+        if (prev.includes(tag)) {
+          newTags = prev.filter((t) => t !== tag);
+        } else {
+          newTags = [...prev, tag];
+        }
+        
+        setEventData((prevData) => ({
+          ...prevData,
+          tags: newTags.join(', '),
+        }));
+        
+        return newTags;
+      });
+    };
+
     // Image Upload Function
     const pickImage = async () => {
         try {
@@ -602,18 +642,6 @@ const fetchEventData = async () => {
         </View>
       </View>
 
-      
-      <View style={[styles.inputGroup, styles.halfWidth]}>
-        <Text style={styles.label}>Time *</Text>
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={() => setShowTimePicker(true)}
-        >
-          <Text style={[styles.datePickerText, !eventData.time && styles.placeholderText]}>
-            {eventData.time || "Select Time"}
-          </Text>
-        </TouchableOpacity>
-      </View>
 
       {/* Image Upload */}
       <View style={styles.inputGroup}>
@@ -673,13 +701,56 @@ const fetchEventData = async () => {
       {/* Tags */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Tags</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="workshop, academic, sports (comma separated)"
-          value={eventData.tags}
-          onChangeText={(value) => handleInputChange("tags", value)}
-        />
-        <Text style={styles.helperText}>Separate multiple tags with commas</Text>
+        
+        <TouchableOpacity
+          style={styles.dropdownButton}
+          onPress={() => setShowTagsDropdown(!showTagsDropdown)}
+        >
+          <View style={styles.dropdownButtonContent}>
+            <Text style={[styles.dropdownButtonText, selectedTags.length === 0 && styles.placeholderText]}>
+              {selectedTags.length > 0 ? `${selectedTags.length} tag${selectedTags.length !== 1 ? 's' : ''} selected` : 'Select tags...'}
+            </Text>
+          </View>
+          <Text style={styles.dropdownIcon}>{showTagsDropdown ? '▲' : '▼'}</Text>
+        </TouchableOpacity>
+
+        {/* Dropdown Menu */}
+        {showTagsDropdown && (
+          <View style={styles.dropdownMenu}>
+            {AvailableTags.map((tag, index) => (
+              <TouchableOpacity
+                key={tag}
+                style={[
+                  styles.dropdownItem,
+                  selectedTags.includes(tag) && styles.dropdownItemSelected,
+                  index === AvailableTags.length - 1 && styles.lastDropdownItem,
+                ]}
+                onPress={() => toggleTag(tag)}
+              >
+                <View style={[styles.checkbox, selectedTags.includes(tag) && styles.checkboxSelected]}>
+                  {selectedTags.includes(tag) && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={[styles.dropdownItemText, selectedTags.includes(tag) && styles.dropdownItemTextSelected]}>
+                  {tag}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Selected Tags Pills */}
+        {selectedTags.length > 0 && (
+          <View style={styles.selectedTagsContainer}>
+            {selectedTags.map((tag) => (
+              <View key={tag} style={styles.tagPill}>
+                <Text style={styles.tagPillText}>{tag}</Text>
+                <TouchableOpacity onPress={() => toggleTag(tag)} style={styles.tagPillCloseBtn}>
+                  <Text style={styles.tagPillClose}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
       </View>
 
       {/* Maximum Participants */}
@@ -909,6 +980,124 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: "#999",
+  },
+  dropdownButton: {
+    borderWidth: 1.5,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    backgroundColor: '#fff',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  dropdownButtonContent: {
+    flex: 1,
+  },
+  dropdownButtonText: {
+    fontSize: 15,
+    color: '#333',
+    fontWeight: '500',
+  },
+  dropdownIcon: {
+    fontSize: 12,
+    color: '#999',
+    marginLeft: 8,
+  },
+  dropdownMenu: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 8,
+    marginTop: 6,
+    maxHeight: 280,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f5f5f5',
+  },
+  lastDropdownItem: {
+    borderBottomWidth: 0,
+  },
+  dropdownItemSelected: {
+    backgroundColor: '#f0f8f4',
+  },
+  dropdownItemText: {
+    fontSize: 15,
+    color: '#333',
+    marginLeft: 12,
+    flex: 1,
+    fontWeight: '500',
+  },
+  dropdownItemTextSelected: {
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: '#d0d0d0',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxSelected: {
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  selectedTagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 12,
+    gap: 8,
+  },
+  tagPill: {
+    backgroundColor: '#e8f5e9',
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tagPillText: {
+    color: '#2e7d32',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tagPillCloseBtn: {
+    padding: 2,
+  },
+  tagPillClose: {
+    color: '#2e7d32',
+    fontSize: 18,
+    fontWeight: 'bold',
+    lineHeight: 18,
   },
 });
 

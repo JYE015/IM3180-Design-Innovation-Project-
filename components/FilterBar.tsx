@@ -14,10 +14,13 @@ const OPTIONS = [
   'Past', 
   'Online', 
   'In-person', 
-  'Workshop', 
-  'Academics', 
-  'Welfare', 
-  'FOC'
+  "Workshop",
+  "Academic",
+  "Sports",
+  "Cultural",
+  "Welfare",
+  "FOC",
+  "Residential Affairs"
 ] as const;
 
 export type FilterOption = typeof OPTIONS[number];
