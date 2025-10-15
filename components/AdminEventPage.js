@@ -18,6 +18,7 @@ export default function AdminEventPage({ route, navigation }) {
     CurrentParticipants: 0,
     MaximumParticipants: event?.MaximumParticipants ?? 0,
   });
+  const [attendeesList, setAttendeesList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchEventDetails = async () => {
@@ -73,10 +74,36 @@ export default function AdminEventPage({ route, navigation }) {
     }
   };
 
+  const fetchAttendees = async () => {
+    try {
+      if (!event?.id) return;
+      
+      const { data: signupsData, error: signupsError } = await supabase
+        .from('attendance')
+        .select(`
+          id,
+          created_at,
+          profiles (
+            username,
+            school,
+            course
+          )
+        `)
+        .eq('event', event.id);
+
+      if (signupsError) throw signupsError;
+
+      setAttendeesList(signupsData || []);
+    } catch (error) {
+      console.error('Error fetching attendees:', error);
+    }
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       fetchEventDetails();
       fetchSignups();
+      fetchAttendees();
     }, [event?.id])
   );
 
@@ -95,9 +122,14 @@ export default function AdminEventPage({ route, navigation }) {
     return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
+  const formatRegistrationDate = (dateStr) => {
+    if (!dateStr) return '';
+    return dayjs(dateStr).format('DD MMM YYYY, HH:mm');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity 
@@ -116,6 +148,7 @@ export default function AdminEventPage({ route, navigation }) {
                 onUpdated: async () => {       
                   await fetchEventDetails();
                   await fetchSignups();
+                  await fetchAttendees();
                 }
               });
             }}
@@ -158,7 +191,7 @@ export default function AdminEventPage({ route, navigation }) {
           <View style={styles.detailRow}>
             <Ionicons name="calendar-outline" size={20} color="#6B7280" />
             <Text style={styles.detailText}>
-              {formatDate(evt?.date)} at {formatTime(evt?.time)}
+              {formatDate(evt?.date)}, {formatTime(evt?.time)}
             </Text>
           </View>
 
@@ -185,31 +218,52 @@ export default function AdminEventPage({ route, navigation }) {
           {/* Divider */}
           <View style={styles.divider} />
 
-          {/* Signup Stats */}
-          <View style={styles.statsContainer}>
-            <Text style={styles.statsTitle}>Registration Status</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{signups.CurrentParticipants || 0}</Text>
-                <Text style={styles.statLabel}>Registered</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{signups.MaximumParticipants || 'Unlimited'}</Text>
-                <Text style={styles.statLabel}>Max Capacity</Text>
-              </View>
+          {/* Number of Signups */}
+          <View style={styles.signupsHeader}>
+            <Text style={styles.signupsTitle}>Number of Signups</Text>
+            <View style={styles.signupsCount}>
+              <Text style={styles.signupsNumber}>
+                {signups.CurrentParticipants || 0}/{signups.MaximumParticipants || 'Unlimited'}
+              </Text>
             </View>
           </View>
 
-          {/* View Attendees Button */}
-          <TouchableOpacity
-            style={styles.attendeesButton}
-            onPress={() => navigation.navigate('AdminTrack', { eventId: event.id })}
-          >
-            <Ionicons name="people" size={24} color="#fff" />
-            <Text style={styles.attendeesButtonText}>View Attendees</Text>
-            <Ionicons name="chevron-forward" size={24} color="#fff" />
-          </TouchableOpacity>
+          {/* Details of Student Signups - Scrollable */}
+          <View style={styles.attendeesContainer}>
+            <Text style={styles.attendeesTitle}>Details of student signups</Text>
+            
+            {attendeesList.length > 0 ? (
+              <ScrollView 
+                style={styles.attendeesScrollView}
+                nestedScrollEnabled={true}
+                showsVerticalScrollIndicator={true}
+              >
+                {attendeesList.map((attendee, index) => (
+                  <View key={attendee.id || index} style={styles.attendeeCard}>
+                    <View style={styles.attendeeInfo}>
+                      <Text style={styles.attendeeName}>
+                        {attendee.profiles?.username || 'Unknown User'}
+                      </Text>
+                      <Text style={styles.attendeeDetail}>
+                        School: {attendee.profiles?.school || 'N/A'}
+                      </Text>
+                      <Text style={styles.attendeeDetail}>
+                        Course: {attendee.profiles?.course || 'N/A'}
+                      </Text>
+                      <Text style={styles.attendeeDate}>
+                        Registered: {formatRegistrationDate(attendee.created_at)}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noAttendeesContainer}>
+                <Ionicons name="people-outline" size={48} color="#D1D5DB" />
+                <Text style={styles.noAttendeesText}>No attendees yet</Text>
+              </View>
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -238,6 +292,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#111827',
+    fontFamily: 'Baloo2-Bold',
   },
   editButton: {
     padding: 8,
@@ -255,6 +310,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontSize: 14,
     color: '#9CA3AF',
+    fontFamily: 'Baloo2-Regular',
   },
   contentContainer: {
     padding: 20,
@@ -264,6 +320,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     marginBottom: 16,
+    fontFamily: 'Baloo2-Bold',
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -281,6 +338,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#1E40AF',
+    fontFamily: 'Baloo2-SemiBold',
   },
   detailRow: {
     flexDirection: 'row',
@@ -292,6 +350,7 @@ const styles = StyleSheet.create({
     color: '#374151',
     marginLeft: 12,
     flex: 1,
+    fontFamily: 'Baloo2-Regular',
   },
   descriptionContainer: {
     marginTop: 20,
@@ -302,71 +361,100 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111827',
     marginBottom: 8,
+    fontFamily: 'Baloo2-SemiBold',
   },
   descriptionText: {
     fontSize: 15,
     color: '#6B7280',
     lineHeight: 24,
+    fontFamily: 'Baloo2-Regular',
   },
   divider: {
     height: 1,
     backgroundColor: '#E5E7EB',
     marginVertical: 20,
   },
-  statsContainer: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 20,
+  signupsHeader: {
     marginBottom: 20,
   },
-  statsTitle: {
-    fontSize: 16,
+  signupsTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
-    marginBottom: 16,
-    textAlign: 'center',
+    color: '#111827',
+    marginBottom: 12,
+    fontFamily: 'Baloo2-SemiBold',
   },
-  statsRow: {
-    flexDirection: 'row',
+  signupsCount: {
+    backgroundColor: '#F3F4F6',
+    padding: 16,
+    borderRadius: 12,
     alignItems: 'center',
-    justifyContent: 'space-around',
   },
-  statItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 32,
+  signupsNumber: {
+    fontSize: 24,
     fontWeight: '700',
     color: '#3B82F6',
-    marginBottom: 4,
+    fontFamily: 'Baloo2-Bold',
   },
-  statLabel: {
-    fontSize: 14,
-    color: '#6B7280',
+  attendeesContainer: {
+    marginTop: 8,
   },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: '#E5E7EB',
+  attendeesTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 16,
+    fontFamily: 'Baloo2-SemiBold',
   },
-  attendeesButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
+  attendeesScrollView: {
+    maxHeight: 400,
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
-    gap: 8,
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    padding: 12,
   },
-  attendeesButtonText: {
+  attendeeCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  attendeeInfo: {
+    gap: 4,
+  },
+  attendeeName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#fff',
+    color: '#111827',
+    marginBottom: 4,
+    fontFamily: 'Baloo2-SemiBold',
+  },
+  attendeeDetail: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontFamily: 'Baloo2-Regular',
+  },
+  attendeeDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
+    fontFamily: 'Baloo2-Regular',
+  },
+  noAttendeesContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+  },
+  noAttendeesText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginTop: 12,
+    fontFamily: 'Baloo2-Regular',
   },
 });

@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Alert,
   Image,
@@ -9,6 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { supabase } from './lib/supabase';
 
@@ -107,6 +109,9 @@ function LoginScreen({ navigation }) {
   const [role, setRole] = useState("User");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
+  // Create ref for password field
+  const passwordInputRef = useRef(null);
 
   // Admin credentials (⚠️ do not ship hardcoded secrets in production)
   const ADMIN_EMAIL = "admin@gmail.com";
@@ -212,95 +217,108 @@ function LoginScreen({ navigation }) {
 
   // ---------- UI ----------
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      enabled={Platform.OS === 'ios'}
     >
-      <Image
-        source={require('./assets/hubble_image.png')}
-        style={styles.hubbleImage}
-      />
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        keyboardDismissMode="on-drag"
+      >
+        <Image
+          source={require('./assets/hubble_image.png')}
+          style={styles.hubbleImage}
+        />
 
-      {/* Role Selection */}
-      <View style={styles.newRoleContainer}>
-        <Text style={styles.roleLabel}>Select Your Role:</Text>
-        <View style={styles.circleButtonRow}>
-          {/* USER */}
-          <TouchableOpacity
-            style={[
-              styles.circleButton,
-              styles.blueCircle,
-              role === "User" && styles.selectedCircle
-            ]}
-            onPress={() => setRole("User")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.circleText}>USER</Text>
-          </TouchableOpacity>
-
-          {/* ADMIN */}
-          <TouchableOpacity
-            style={[
-              styles.circleButton,
-              styles.redCircle,
-              role === "Admin" && styles.selectedCircle
-            ]}
-            onPress={() => setRole("Admin")}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.circleText}>ADMIN</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Email */}
-      <Text style={styles.inputLabel}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={role === "Admin" ? "Admin Email" : "Your Email"}
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-      {/* Password */}
-      <Text style={styles.inputLabel}>Password</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={role === "Admin" ? "Admin Password" : "Your Password"}
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-
-      {/* Buttons */}
-      {email.trim() !== "" && password.trim() !== "" && (
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, styles.loginButton]}
-            onPress={handleLogin}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.buttonText}>Login</Text>
-          </TouchableOpacity>
-          {role !== "Admin" && (
+        {/* Role Selection */}
+        <View style={styles.newRoleContainer}>
+          <View style={styles.circleButtonRow}>
+            {/* USER */}
             <TouchableOpacity
-              style={[styles.button, styles.signupButton]}
-              onPress={handleSignup}
+              style={[
+                styles.circleButton,
+                styles.blueCircle,
+                role === "User" && styles.selectedCircle
+              ]}
+              onPress={() => setRole("User")}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>Sign Up</Text>
+              <Text style={styles.circleText}>USER</Text>
             </TouchableOpacity>
-          )}
-        </View>
-      )}
 
-      <StatusBar style="auto" />
-    </ScrollView>
+            {/* ADMIN */}
+            <TouchableOpacity
+              style={[
+                styles.circleButton,
+                styles.redCircle,
+                role === "Admin" && styles.selectedCircle
+              ]}
+              onPress={() => setRole("Admin")}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.circleText}>ADMIN</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Email */}
+        <Text style={styles.inputLabel}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder={role === "Admin" ? "Admin Email" : "Your Email"}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="next"
+          onSubmitEditing={() => passwordInputRef.current?.focus()}
+          blurOnSubmit={false}
+        />
+
+        {/* Password */}
+        <Text style={styles.inputLabel}>Password</Text>
+        <TextInput
+          ref={passwordInputRef}
+          style={styles.input}
+          placeholder={role === "Admin" ? "Admin Password" : "Your Password"}
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+          returnKeyType="done"
+        />
+
+        {/* Buttons */}
+        {email.trim() !== "" && password.trim() !== "" && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.button, styles.loginButton]}
+              onPress={handleLogin}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+            {role !== "Admin" && (
+              <TouchableOpacity
+                style={[styles.button, styles.signupButton]}
+                onPress={handleSignup}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.buttonText}>Sign Up</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        <StatusBar style="auto" />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -372,6 +390,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 20,
     resizeMode: 'contain',
+  },
+  newRoleContainer: {
+    width: '100%',
+    alignItems: 'center',  
   },
   roleLabel: {
     fontSize: 20,

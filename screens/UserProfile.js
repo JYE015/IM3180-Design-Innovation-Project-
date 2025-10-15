@@ -397,15 +397,16 @@ const isPastEvent = (dateStr, timeStr) => {
 
         {/* Avatar positioned to overlap */}
         <View style={styles.avatarWrapper}>
+          <View style={styles.avatarBorderTop} />
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={styles.avatarLarge} />
           ) : (
             <View style={styles.avatarPlaceholder} />
           )}
           <TouchableOpacity 
-            style={styles.editIconContainer}
-            onPress={showImageOptionsDialog} 
-            disabled={uploading}
+          style={styles.editIconContainer}
+          onPress={showImageOptionsDialog} 
+          disabled={uploading}
           >
             <Feather name="edit-2" size={20} color="#666" />
           </TouchableOpacity>
@@ -415,7 +416,7 @@ const isPastEvent = (dateStr, timeStr) => {
           {/* Space for avatar overlap */}
           <View style={styles.avatarSpace} />
 
-          <Text style={styles.label}>Email (read-only)</Text>
+          <Text style={styles.label}>Email</Text>
           <TextInput style={[styles.input, styles.disabled]} value={email} editable={false} />
 
           <Text style={styles.label}>Username</Text>
@@ -560,6 +561,19 @@ const styles = StyleSheet.create({
     marginTop: 20,
     zIndex: 10,
   },
+  avatarBorderTop: {
+    position: 'absolute',
+    top: -10,
+    width: 130,
+    height: 70,
+    borderTopLeftRadius: 63,
+    borderTopRightRadius: 63,
+    borderWidth: 6,
+    borderBottomWidth: 0,
+    borderColor: '#B8C4FE',
+    backgroundColor: 'transparent',
+    zIndex: -1,
+  },
 
   avatarLarge: {
     width: 120,
@@ -588,13 +602,15 @@ const styles = StyleSheet.create({
   },
   
   card: {
-    backgroundColor: '#B8D9FF',
+    backgroundColor: '#FFFFFF',
     borderRadius: 40,
     padding: 16,
     marginTop: -60,
     marginBottom: 0, 
-    paddingTop: 76,
+    paddingTop: 50,
     paddingBottom: 40,
+    borderWidth: 6,
+    borderColor: '#B8C4FE',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

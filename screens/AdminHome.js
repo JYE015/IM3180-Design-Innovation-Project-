@@ -7,19 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import AdminEventListItem from '../components/AdminEventListItem';
 import { supabase } from '../lib/supabase';
 
-/* 
-  Event object shape:
-  {
-    id: number,
-    date: string,       // ISO built from Date + Time
-    time: string,       // from DB Time
-    title: string,      // mapped from Title
-    location: string,   // mapped from Location
-    image_url: string,  // mapped from image_url
-    deadline: string    // mapped from Deadline
-  }
-*/
-
 export default function AdminHome() {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [pastEvents, setPastEvents] = useState([]);
@@ -68,7 +55,7 @@ export default function AdminHome() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const today = new Date().toISOString().slice(0, 10); // Get current date in YYYY-MM-DD format
+      const today = new Date().toISOString().slice(0, 10);
 
       const { data, error } = await supabase
         .from('Events')
@@ -93,7 +80,6 @@ export default function AdminHome() {
         currentParticipants: r.CurrentParticipants
       }));
 
-      // Split events into upcoming and past
       const upcoming = normalized.filter(event => event.date >= today);
       const past = normalized.filter(event => event.date < today);
 
@@ -146,13 +132,13 @@ export default function AdminHome() {
                   event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   event.location.toLowerCase().includes(searchQuery.toLowerCase())
                 )
-                  .map(event => (
-            <AdminEventListItem 
-                key={event.id} 
-                event={event} 
-                onPress={() => navigation.navigate('AdminEventPage', { event })}
-            />
-            ))}
+                .map(event => (
+                  <AdminEventListItem 
+                    key={event.id} 
+                    event={event} 
+                    onPress={() => navigation.navigate('AdminEventPage', { event })}
+                  />
+                ))}
             </ScrollView>
           </View>
 
@@ -168,13 +154,13 @@ export default function AdminHome() {
                   event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                   event.location.toLowerCase().includes(searchQuery.toLowerCase())
                 )
-                  .map(event => (
-            <AdminEventListItem 
-                key={event.id} 
-                event={event} 
-                onPress={() => navigation.navigate('AdminEventPage', { event })}
-            />
-            ))}
+                .map(event => (
+                  <AdminEventListItem 
+                    key={event.id} 
+                    event={event} 
+                    onPress={() => navigation.navigate('AdminEventPage', { event })}
+                  />
+                ))}
             </ScrollView>
           </View>
         </View>
@@ -206,7 +192,7 @@ export default function AdminHome() {
                 style={[styles.menuItem, { backgroundColor: '#ff9800', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
-                  navigation.navigate('AdminAnnouncements'); // ✅ Now navigates to announcements page
+                  navigation.navigate('AdminAnnouncements');
                 }}
               >
                 <Ionicons name="megaphone" size={24} color="white" />
@@ -271,7 +257,8 @@ const styles = StyleSheet.create({
   messageText: { 
     fontSize: 16, 
     color: '#666',
-    textAlign: 'center'
+    textAlign: 'center',
+    fontFamily: 'Baloo2-Regular',
   },
   searchInput: {
     height: 40,
@@ -280,7 +267,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     backgroundColor: '#fff',
-    marginBottom: 8
+    marginBottom: 8,
+    fontFamily: 'Baloo2-Regular',
   },
   contentContainer: {
     flex: 1,
@@ -294,7 +282,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 12,
     paddingHorizontal: 16,
-    color: '#333'
+    color: '#333',
+    fontFamily: 'Baloo2-Bold',
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -352,7 +341,8 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333'
+    color: '#333',
+    fontFamily: 'Baloo2-Bold',
   },
   fabActive: {
     backgroundColor: '#f44336'
