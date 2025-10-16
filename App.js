@@ -22,6 +22,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
+// ✅ Import TinderViewProvider
+import { TinderViewProvider, useTinderView } from './context/TinderViewContext';
+
 import UserProfile from './screens/UserProfile';
 import EventHome from './screens/EventHome';
 import EventPage from './components/EventPage';
@@ -34,10 +37,10 @@ import EditEvent from './screens/EditEvent';
 import AdminEventPage from './components/AdminEventPage';
 import AdminTrack from './screens/AdminTrack';
 
-// ✅ NEW: Import Announcements
+// ✅ Import Announcements
 import Announcements from './screens/Announcements';
 
-// ✅ NEW: Import AdminAnnouncements
+// ✅ Import AdminAnnouncements
 import AdminAnnouncements from './screens/AdminAnnouncements';
 
 // Import icons
@@ -74,7 +77,8 @@ function MainTabs() {
           backgroundColor: '#B8C4FE',
           borderTopWidth: 0, 
         },
-        headerShown: false, // We'll handle headers in individual screens
+        headerShown: false,
+        unmountOnBlur: false,
       })}
     >
       <Tab.Screen
@@ -89,7 +93,6 @@ function MainTabs() {
         options={{ title: 'Calendar' }}
       />
 
-      {/* ✅ NEW: Announcements Tab */}
       <Tab.Screen
         name="Announcements"
         component={Announcements}
@@ -106,16 +109,22 @@ function MainTabs() {
 }
 
 function LoginScreen({ navigation }) {
+  // ✅ NEW: Get reset function from context
+  const { resetTinderView } = useTinderView();
+  
   const [role, setRole] = useState("User");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   
-  // Create ref for password field
   const passwordInputRef = useRef(null);
 
-  // Admin credentials (⚠️ do not ship hardcoded secrets in production)
   const ADMIN_EMAIL = "admin@gmail.com";
   const ADMIN_PASSWORD = "000000";
+
+  // ✅ NEW: Reset TinderView when login screen mounts
+  useEffect(() => {
+    resetTinderView();
+  }, []);
 
   // ---------------- SIGN UP FUNCTION ----------------
   const handleSignup = async () => {
@@ -150,7 +159,6 @@ function LoginScreen({ navigation }) {
         return;
       }
 
-      // Create profile in DB
       await supabase.from('profiles').upsert(
         { id: userData.user.id, role: 'User' },
         { onConflict: 'id' }
@@ -174,7 +182,6 @@ function LoginScreen({ navigation }) {
     }
 
     try {
-      // Admin path
       if (role === "Admin") {
         if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
           Alert.alert("Welcome Admin!", "You have successfully logged in as Hall 5 Admin.");
@@ -188,7 +195,6 @@ function LoginScreen({ navigation }) {
         }
       }
 
-      // Regular user login
       const { data: userData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password: password,
@@ -204,7 +210,6 @@ function LoginScreen({ navigation }) {
         return false;
       }
 
-      // Navigate to main tabs
       navigation.navigate('MainTabs');
       return true;
 
@@ -234,10 +239,8 @@ function LoginScreen({ navigation }) {
           style={styles.hubbleImage}
         />
 
-        {/* Role Selection */}
         <View style={styles.newRoleContainer}>
           <View style={styles.circleButtonRow}>
-            {/* USER */}
             <TouchableOpacity
               style={[
                 styles.circleButton,
@@ -250,7 +253,6 @@ function LoginScreen({ navigation }) {
               <Text style={styles.circleText}>USER</Text>
             </TouchableOpacity>
 
-            {/* ADMIN */}
             <TouchableOpacity
               style={[
                 styles.circleButton,
@@ -265,7 +267,6 @@ function LoginScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Email */}
         <Text style={styles.inputLabel}>Email</Text>
         <TextInput
           style={styles.input}
@@ -280,7 +281,6 @@ function LoginScreen({ navigation }) {
           blurOnSubmit={false}
         />
 
-        {/* Password */}
         <Text style={styles.inputLabel}>Password</Text>
         <TextInput
           ref={passwordInputRef}
@@ -294,7 +294,6 @@ function LoginScreen({ navigation }) {
           returnKeyType="done"
         />
 
-        {/* Buttons */}
         {email.trim() !== "" && password.trim() !== "" && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -353,30 +352,37 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="EventPage" component={EventPage} options={{ title: 'Event Details' }} />
-        <Stack.Screen name="AdminPage" component={CreateEvent} options={{ title: 'Event Details' }} />
-        <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: 'Admin Home' }} />
-        <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
-        <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ headerShown: false }} />
-        <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
-        <Stack.Screen name="TinderView" component={TinderView} options={{ title: 'Event Home' }} />
-        <Stack.Screen name="AdminTrack" component={AdminTrack} options={{ title: 'Track Event' }} />
-        {/* ✅ NEW: Register AdminAnnouncements screen */}
-        <Stack.Screen 
-          name="AdminAnnouncements" 
-          component={AdminAnnouncements} 
-          options={{ title: 'Admin Announcements' }} 
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <TinderViewProvider>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
+          <Stack.Screen name="EventPage" component={EventPage} options={{ title: 'Event Details' }} />
+          <Stack.Screen name="AdminPage" component={CreateEvent} options={{ title: 'Event Details' }} />
+          <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: 'Admin Home' }} />
+          <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
+          <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ headerShown: false }} />
+          <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
+          <Stack.Screen 
+            name="TinderView" 
+            component={TinderView} 
+            options={{ 
+              title: 'Event Home',
+              unmountOnBlur: false
+            }} 
+          />
+          <Stack.Screen name="AdminTrack" component={AdminTrack} options={{ title: 'Track Event' }} />
+          <Stack.Screen 
+            name="AdminAnnouncements" 
+            component={AdminAnnouncements} 
+            options={{ title: 'Admin Announcements' }} 
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </TinderViewProvider>
   );
 }
 
-// ---------------- Styles ----------------
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,

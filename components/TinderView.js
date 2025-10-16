@@ -12,13 +12,14 @@ import dayjs from 'dayjs';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTinderView } from '../context/TinderViewContext';
 
 const screenWidth = Dimensions.get('window').width;
 const screenHeight = Dimensions.get('window').height;
 
 export default function TinderView({ events, searchQuery }) {
   const navigation = useNavigation();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const { currentIndex, setCurrentIndex } = useTinderView();
   const [filteredEvents, setFilteredEvents] = useState([]);
   
   // Animation values for swipe and card stacking
@@ -30,12 +31,12 @@ export default function TinderView({ events, searchQuery }) {
   const nextCardOpacity = useRef(new Animated.Value(0.7)).current;
   const [swiping, setSwiping] = useState(false);
   
-  // Simple touch tracking - no PanResponder needed!
+  // Simple touch tracking
   const touchStart = useRef({ x: 0, y: 0 });
   const touchEnd = useRef({ x: 0, y: 0 });
   const isSwiping = useRef(false);
   
-    // Filter events when search query changes - now also filters for upcoming events
+  // Filter events when search query changes - now also filters for upcoming events
   useEffect(() => {
     const today = dayjs().startOf('day');
     
@@ -67,18 +68,12 @@ export default function TinderView({ events, searchQuery }) {
     if (filteredEvents.length > 0 && currentIndex >= filteredEvents.length) {
       setCurrentIndex(0);
     }
-  }, [filteredEvents]);
-  
-  // Handle edge cases after filtering
-  useEffect(() => {
-    if (filteredEvents.length > 0 && currentIndex >= filteredEvents.length) {
-      setCurrentIndex(0);
-    }
-  }, [filteredEvents]);
+  }, [filteredEvents, currentIndex, setCurrentIndex]);
   
   // Reset animation values when currentIndex changes
   useEffect(() => {
     position.setValue(0);
+    rotation.setValue(0);
     scale.setValue(1);
     opacity.setValue(1);
     nextCardScale.setValue(0.9);
@@ -164,14 +159,13 @@ export default function TinderView({ events, searchQuery }) {
     if (!isSwiping.current) return;
     
     const currentX = event.nativeEvent.pageX;
-    const currentY = event.nativeEvent.pageY;
     const deltaX = currentX - touchStart.current.x;
     
     // Move card with finger in real-time
     position.setValue(deltaX);
     
     // Add subtle rotation based on swipe direction
-    const rotationValue = deltaX / 25; // Subtle rotation effect
+    const rotationValue = deltaX / 25;
     rotation.setValue(rotationValue);
     
     // Adjust opacity based on swipe distance
@@ -195,7 +189,6 @@ export default function TinderView({ events, searchQuery }) {
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
       if (deltaX < 0 && currentIndex < filteredEvents.length - 1) {
         // Left swipe - next card
-        // Animate the rest of the way off screen
         Animated.timing(position, {
           toValue: -screenWidth,
           duration: 20,
@@ -251,99 +244,16 @@ export default function TinderView({ events, searchQuery }) {
   if (filteredEvents.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No events found</Text>
+        <Text style={styles.emptyText}>No upcoming events found</Text>
       </View>
     );
   }
 
   const currentEvent = filteredEvents[currentIndex];
   if (!currentEvent) return null;
-
-  // Helper function to renderEventCard
-  const renderEventCard = (event, index, isCurrentCard = false) => {
-    if (!event) return null;
-    
-    // Only current card gets pan handlers
-    const cardProps = isCurrentCard ? panResponder.panHandlers : {};
-    
-    // Style properties depend on whether this is current card or next card
-    const cardStyle = isCurrentCard
-      ? [
-          styles.card,
-          {
-            transform: [
-              { translateX: position },
-              { scale: scale }
-            ],
-            opacity: opacity,
-            zIndex: filteredEvents.length - index
-          }
-        ]
-      : [
-          styles.card,
-          styles.nextCard,
-          {
-            transform: [{ scale: nextCardScale }],
-            opacity: nextCardOpacity,
-            zIndex: filteredEvents.length - index - 1
-          }
-        ];
-    
-    return (
-      <Animated.View 
-        key={`card-${event.id}`}
-        style={cardStyle}
-        {...cardProps}
-      >
-        {event.image_url ? (
-          <Image 
-            source={{ uri: event.image_url }} 
-            style={styles.cardImage}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.cardImage, styles.placeholderImage]}>
-            <Text style={styles.placeholderText}>No Image</Text>
-          </View>
-        )}
-
-        {/* Tags */}
-        {event.tags && (
-          <View style={styles.tagsContainer}>
-            {event.tags.split(',').map((tag, tagIndex) => (
-              <View key={tagIndex} style={styles.tagBadge}>
-                <Text style={styles.tagText}>{tag.trim()}</Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {/* Event info */}
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.9)']}
-          style={styles.infoOverlay}
->
-          <Text style={styles.eventTitle}>{currentEvent.title}</Text>
-          <Text style={styles.eventDate}>
-            {dayjs(currentEvent.date).format('D MMMM YYYY')}
-          </Text>
-          <Text style={styles.eventLocation}>{currentEvent.location}</Text>
-        </LinearGradient>
-
-        {/* Details button */}
-        <TouchableOpacity 
-          style={styles.detailsButton}
-          onPress={() => navigation.navigate('EventPage', { id: event.id })}
-        >
-          <Ionicons name="information-circle" size={50} color="#0055FE" />
-        </TouchableOpacity>
-      </Animated.View>
-    );
-  };
   
   return (
     <View style={styles.container}>
-
       {/* Card container with swipe detection and navigation arrows */}
       <View style={styles.cardWrapper}>
         {/* Left navigation arrow */}
@@ -406,7 +316,7 @@ export default function TinderView({ events, searchQuery }) {
           <LinearGradient
             colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.9)']}
             style={styles.infoOverlay}
->
+          >
             <Text style={styles.eventTitle}>{currentEvent.title}</Text>
             <Text style={styles.eventDate}>
               {dayjs(currentEvent.date).format('D MMMM YYYY')}
@@ -436,7 +346,7 @@ export default function TinderView({ events, searchQuery }) {
         )}
       </View>
       
-{/* Event counter */}
+      {/* Event counter */}
       <View style={styles.counterContainer}>
         <Text style={styles.counter}>{currentIndex + 1} / {filteredEvents.length}</Text>
       </View>
@@ -468,14 +378,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     fontFamily: 'Baloo2-SemiBold',
   },
-  cardContainer: {
-    width: screenWidth - 32,
-    height: 500,
-    position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontFamily: 'Baloo2-SemiBold',
-  },
   cardWrapper: {
     width: screenWidth - 32,
     height: 500,
@@ -497,7 +399,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(240,240,240,0.8)',
-    fontFamily: 'Baloo2-SemiBold',
   },
   navArrow: {
     position: 'absolute',
@@ -570,7 +471,7 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     paddingBottom: 20,
-    height: '50%', // This creates a taller gradient
+    height: '50%',
     justifyContent: 'flex-end',
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -616,5 +517,4 @@ const styles = StyleSheet.create({
     color: '#666',
     fontFamily: 'Baloo2-SemiBold',
   },
-
 });

@@ -358,7 +358,6 @@ const isDeadlinePassed = useCallback(() => {
       </ScrollView>
       
       <View style={styles.footer}>
-        <Text style={styles.priceText}>Free</Text>
         
         {isRegistered ? (
           <>

@@ -20,6 +20,9 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
+// ✅ NEW: Import useTinderView
+import { useTinderView } from '../context/TinderViewContext';
+
 const formatEventDateTime = (dateStr, timeStr) => {
   if (!dateStr) return '—';
   const iso = timeStr ? `${dateStr}T${timeStr}` : `${dateStr}T00:00:00`;
@@ -28,8 +31,19 @@ const formatEventDateTime = (dateStr, timeStr) => {
   return dt.toLocaleString();
 };
 
+const isPastEvent = (dateStr, timeStr) => {
+  if (!dateStr) return false;
+  const iso = timeStr ? `${dateStr}T${timeStr}` : `${dateStr}T00:00:00`;
+  const eventDate = new Date(iso);
+  return eventDate < new Date();
+};
+
 export default function UserProfile() {
   const navigation = useNavigation();
+  
+  // ✅ NEW: Get reset function from context
+  const { resetTinderView } = useTinderView();
+  
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -89,14 +103,6 @@ export default function UserProfile() {
       setLoading(false);
     }
   }, []);
-
-  // First, add this helper function near the top of the file with the other helpers
-const isPastEvent = (dateStr, timeStr) => {
-  if (!dateStr) return false;
-  const iso = timeStr ? `${dateStr}T${timeStr}` : `${dateStr}T00:00:00`;
-  const eventDate = new Date(iso);
-  return eventDate < new Date();
-};
 
   useEffect(() => {
     fetchProfile();
@@ -201,6 +207,10 @@ const isPastEvent = (dateStr, timeStr) => {
                 Alert.alert('Error', 'Failed to log out');
                 return;
               }
+              
+              // ✅ NEW: Reset TinderView position on logout
+              resetTinderView();
+              
               const parentNavigator = navigation.getParent();
               if (parentNavigator) {
                 parentNavigator.reset({
@@ -471,31 +481,31 @@ const isPastEvent = (dateStr, timeStr) => {
           </TouchableOpacity>
 
           {showEvents && (
-    <View style={styles.attendedSection}>
-    {attendedEvents.length > 0 ? (
-      attendedEvents
-        .filter(row => {
-          const ev = row.eventData || {};
-          return isPastEvent(ev.Date, ev.Time);
-        })
-        .map((row) => {
-          const ev = row.eventData || {};
-          const eventName = ev.Title || `Event #${row.event}`;
-          const eventWhen = formatEventDateTime(ev.Date, ev.Time);
-          
-          return (
-            <View key={row.id} style={styles.eventItem}>
-              <Text style={styles.eventText}>{eventName}</Text>
-              {ev.Description ? <Text style={styles.eventMeta}>{ev.Description}</Text> : null}
-              <Text style={styles.eventDate}>Event date & time: {eventWhen}</Text>
+            <View style={styles.attendedSection}>
+              {attendedEvents.length > 0 ? (
+                attendedEvents
+                  .filter(row => {
+                    const ev = row.eventData || {};
+                    return isPastEvent(ev.Date, ev.Time);
+                  })
+                  .map((row) => {
+                    const ev = row.eventData || {};
+                    const eventName = ev.Title || `Event #${row.event}`;
+                    const eventWhen = formatEventDateTime(ev.Date, ev.Time);
+                    
+                    return (
+                      <View key={row.id} style={styles.eventItem}>
+                        <Text style={styles.eventText}>{eventName}</Text>
+                        {ev.Description ? <Text style={styles.eventMeta}>{ev.Description}</Text> : null}
+                        <Text style={styles.eventDate}>Event date & time: {eventWhen}</Text>
+                      </View>
+                    );
+                  })
+              ) : (
+                <Text style={styles.attendedEmpty}>No past events attended.</Text>
+              )}
             </View>
-          );
-        })
-    ) : (
-      <Text style={styles.attendedEmpty}>No past events attended.</Text>
-    )}
-  </View>
-)}
+          )}
 
           <TouchableOpacity 
             style={styles.logoutBtn} 
@@ -563,7 +573,7 @@ const styles = StyleSheet.create({
   },
   avatarBorderTop: {
     position: 'absolute',
-    top: -10,
+    top: -5,
     width: 130,
     height: 70,
     borderTopLeftRadius: 63,
@@ -572,7 +582,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
     borderColor: '#B8C4FE',
     backgroundColor: 'transparent',
-    zIndex: -1,
   },
 
   avatarLarge: {

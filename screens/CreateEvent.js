@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import * as ImagePicker from 'expo-image-picker';
 import {
   View,
@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { supabase } from "../lib/supabase";
 import { Calendar } from 'react-native-calendars';
-
 
 // Tags definition
 const AvailableTags = [
@@ -158,7 +157,6 @@ const TimePickerModal = ({ visible, selectedTime, onTimeSelect, onClose, title =
   );
 };
 
-
 const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "Select Date" }) => {
   const [selected, setSelected] = useState(selectedDate || '');
 
@@ -198,6 +196,16 @@ const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "
 };
 
 export default function CreateEvent() {
+  // Create refs for navigation
+  const locationInputRef = useRef(null);
+  const detailsInputRef = useRef(null);
+  const maximumInputRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  const detailsViewRef = useRef(null);
+  const tagsViewRef = useRef(null);
+  const maximumViewRef = useRef(null);
+  const submitButtonViewRef = useRef(null);
+
   const [eventData, setEventData] = useState({
     event_title: "",
     date: "",
@@ -230,12 +238,12 @@ export default function CreateEvent() {
 
   // Handle date selection from calendar
   const handleDateSelect = (date) => {
-      handleInputChange("date", date);
+    handleInputChange("date", date);
   };
 
   // Handle deadline selection from calendar
   const handleDeadlineSelect = (date) => {
-      handleInputChange("registration_deadline", date);
+    handleInputChange("registration_deadline", date);
   };
 
   // Handling Input Changes
@@ -268,43 +276,80 @@ export default function CreateEvent() {
   // Image Uploader
   const pickImage = async () => {
     try {
-      // Request permission to access media library
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to upload images.');
+        // Skip to next field even if permission denied
+        setTimeout(() => {
+          detailsViewRef.current?.measureLayout(
+            scrollViewRef.current,
+            (x, y) => {
+              scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+            }
+          );
+          setTimeout(() => detailsInputRef.current?.focus(), 300);
+        }, 300);
         return;
       }
 
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [16, 9], // You can adjust this ratio
-        quality: 0.8, // Compress image to reduce file size
+        aspect: [16, 9],
+        quality: 0.8,
       });
 
       if (!result.canceled && result.assets[0]) {
         handleInputChange("image_uri", result.assets[0].uri);
       }
+      
+      // Auto-focus details field after image selection (or cancellation)
+      setTimeout(() => {
+        detailsViewRef.current?.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          }
+        );
+        setTimeout(() => detailsInputRef.current?.focus(), 300);
+      }, 300);
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image. Please try again.');
+      // Continue to next field even on error
+      setTimeout(() => {
+        detailsViewRef.current?.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          }
+        );
+        setTimeout(() => detailsInputRef.current?.focus(), 300);
+      }, 300);
     }
   };
 
   // Taking Photo from Image
   const takePhoto = async () => {
     try {
-      // Request permission to access camera
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Sorry, we need camera permissions to take photos.');
+        // Skip to next field even if permission denied
+        setTimeout(() => {
+          detailsViewRef.current?.measureLayout(
+            scrollViewRef.current,
+            (x, y) => {
+              scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+            }
+          );
+          setTimeout(() => detailsInputRef.current?.focus(), 300);
+        }, 300);
         return;
       }
 
-      // Launch camera
       const result = await ImagePicker.launchCameraAsync({
         allowsEditing: true,
         aspect: [16, 9],
@@ -314,9 +359,30 @@ export default function CreateEvent() {
       if (!result.canceled && result.assets[0]) {
         handleInputChange("image_uri", result.assets[0].uri);
       }
+      
+      // Auto-focus details field after photo (or cancellation)
+      setTimeout(() => {
+        detailsViewRef.current?.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          }
+        );
+        setTimeout(() => detailsInputRef.current?.focus(), 300);
+      }, 300);
     } catch (error) {
       console.error('Error taking photo:', error);
       Alert.alert('Error', 'Failed to take photo. Please try again.');
+      // Continue to next field even on error
+      setTimeout(() => {
+        detailsViewRef.current?.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          }
+        );
+        setTimeout(() => detailsInputRef.current?.focus(), 300);
+      }, 300);
     }
   };
 
@@ -328,8 +394,37 @@ export default function CreateEvent() {
       [
         { text: 'Camera', onPress: takePhoto },
         { text: 'Gallery', onPress: pickImage },
-        { text: 'Remove Image', onPress: () => handleInputChange("image_uri", ""), style: 'destructive' },
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Skip', 
+          onPress: () => {
+            // Skip image and go to details
+            setTimeout(() => {
+              detailsViewRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                  scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+                }
+              );
+              setTimeout(() => detailsInputRef.current?.focus(), 300);
+            }, 300);
+          }
+        },
+        { 
+          text: 'Remove Image', 
+          onPress: () => {
+            handleInputChange("image_uri", "");
+            setTimeout(() => {
+              detailsViewRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                  scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+                }
+              );
+              setTimeout(() => detailsInputRef.current?.focus(), 300);
+            }, 300);
+          }, 
+          style: 'destructive' 
+        },
       ]
     );
   };
@@ -344,11 +439,9 @@ export default function CreateEvent() {
       const fileExt = imageUri.split('.').pop().toLowerCase();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      // Convert file URI → ArrayBuffer
       const response = await fetch(imageUri);
       const arrayBuffer = await response.arrayBuffer();
 
-      // Upload as ArrayBuffer
       const { error: uploadError } = await supabase.storage
         .from("event-images")
         .upload(fileName, arrayBuffer, {
@@ -360,14 +453,12 @@ export default function CreateEvent() {
         throw uploadError;
       }
 
-      // Get public URL
       const { data: publicUrlData } = supabase.storage
         .from("event-images")
         .getPublicUrl(fileName);
 
       const publicUrl = publicUrlData.publicUrl;
 
-      // Update preview to hosted URL
       setEventData((prev) => ({
         ...prev,
         image_uri: publicUrl,
@@ -382,21 +473,19 @@ export default function CreateEvent() {
       setUploadingImage(false);
     }
   };
+
   // Handling Form Submission to Supabase
   const handleSubmit = async () => {
-    // Basic Validation
     if (!eventData.event_title || !eventData.date || !eventData.time || !eventData.details) {
       Alert.alert("Error", "Please fill in all required fields.");
       return;
     }
 
-    // Validate Maximum if provided
     if (eventData.maximum && (isNaN(eventData.maximum) || parseInt(eventData.maximum) <= 0)) {
       Alert.alert("Error", "Maximum must be a positive number.");
       return;
     }
 
-    // Validate Date & Time format
     const dateOk = /^\d{4}-\d{2}-\d{2}$/.test(eventData.date);
     const timeOk = /^([01]\d|2[0-3]):[0-5]\d$/.test(eventData.time || "");
     if (!dateOk) {
@@ -415,7 +504,6 @@ export default function CreateEvent() {
       if (eventData.image_uri) {
         imageUrl = await uploadImageToSupabase(eventData.image_uri);
         if (!imageUrl) {
-          // If image upload failed, ask user if they want to continue without image
           const shouldContinue = await new Promise((resolve) => {
             Alert.alert(
               'Image Upload Failed',
@@ -469,6 +557,7 @@ export default function CreateEvent() {
           maximum: "",
           location: "",
         });
+        setSelectedTags([]);
       }
     } catch (err) {
       Alert.alert("Error", `An unexpected error occurred: ${err.message}`);
@@ -478,10 +567,12 @@ export default function CreateEvent() {
     }
   };
 
-  // UI Side
-
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView 
+      ref={scrollViewRef}
+      style={styles.container} 
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Create New Event</Text>
         <Text style={styles.subtitle}>Fill in the details below to create a new event.</Text>
@@ -495,6 +586,9 @@ export default function CreateEvent() {
           placeholder="Enter event title"
           value={eventData.event_title}
           onChangeText={(value) => handleInputChange("event_title", value)}
+          returnKeyType="next"
+          onSubmitEditing={() => locationInputRef.current?.focus()}
+          blurOnSubmit={false}
         />
       </View>
 
@@ -502,10 +596,14 @@ export default function CreateEvent() {
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Location *</Text>
         <TextInput
+          ref={locationInputRef}
           style={styles.input}
           placeholder="Enter event location"  
           value={eventData.location}
           onChangeText={(value) => handleInputChange("location", value)}
+          returnKeyType="next"
+          onSubmitEditing={() => setShowCalendar(true)}
+          blurOnSubmit={false}
         />
       </View>
       
@@ -550,7 +648,6 @@ export default function CreateEvent() {
           </Text>
         </TouchableOpacity>
 
-        {/* Image Preview */}
         {eventData.image_uri && (
           <View style={styles.imagePreview}>
             <Text style={styles.previewLabel}>Preview:</Text>
@@ -566,15 +663,19 @@ export default function CreateEvent() {
       </View>
 
       {/* Event Details */}
-      <View style={styles.inputGroup}>
+      <View style={styles.inputGroup} ref={detailsViewRef} collapsable={false}>
         <Text style={styles.label}>Details of Event *</Text>
         <TextInput
+          ref={detailsInputRef}
           style={[styles.input, styles.textArea]}
           placeholder="Describe your event details..."
           value={eventData.details}
           onChangeText={(value) => handleInputChange("details", value)}
           multiline={true}
           numberOfLines={4}
+          returnKeyType="next"
+          onSubmitEditing={() => setShowDeadlineCalendar(true)}
+          blurOnSubmit={true}
         />
       </View>
 
@@ -592,7 +693,7 @@ export default function CreateEvent() {
       </View>
 
       {/* Tags */}
-      <View style={styles.inputGroup}>
+      <View style={styles.inputGroup} ref={tagsViewRef} collapsable={false}>
         <Text style={styles.label}>Tags</Text>
         
         <TouchableOpacity
@@ -607,18 +708,33 @@ export default function CreateEvent() {
           <Text style={styles.dropdownIcon}>{showTagsDropdown ? '▲' : '▼'}</Text>
         </TouchableOpacity>
 
-        {/* Dropdown Menu */}
         {showTagsDropdown && (
-          <View style={styles.dropdownMenu}>
+          <ScrollView style={styles.dropdownMenu} nestedScrollEnabled={true}>
             {AvailableTags.map((tag, index) => (
               <TouchableOpacity
                 key={tag}
                 style={[
                   styles.dropdownItem,
                   selectedTags.includes(tag) && styles.dropdownItemSelected,
-                  index === AvailableTags.length - 1 && styles.lastDropdownItem,
                 ]}
-                onPress={() => toggleTag(tag)}
+                onPress={() => {
+                  toggleTag(tag);
+                  // Auto-close dropdown and move to maximum field after selecting a tag
+                  if (!selectedTags.includes(tag)) {
+                    setTimeout(() => {
+                      setShowTagsDropdown(false);
+                      setTimeout(() => {
+                        maximumViewRef.current?.measureLayout(
+                          scrollViewRef.current,
+                          (x, y) => {
+                            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+                          }
+                        );
+                        setTimeout(() => maximumInputRef.current?.focus(), 300);
+                      }, 300);
+                    }, 500);
+                  }
+                }}
               >
                 <View style={[styles.checkbox, selectedTags.includes(tag) && styles.checkboxSelected]}>
                   {selectedTags.includes(tag) && <Text style={styles.checkmark}>✓</Text>}
@@ -628,10 +744,30 @@ export default function CreateEvent() {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+            
+            {/* Skip button at bottom of dropdown */}
+            <TouchableOpacity
+              style={[styles.dropdownItem, { backgroundColor: '#f5f5f5', borderTopWidth: 2, borderTopColor: '#e0e0e0' }]}
+              onPress={() => {
+                setShowTagsDropdown(false);
+                setTimeout(() => {
+                  maximumViewRef.current?.measureLayout(
+                    scrollViewRef.current,
+                    (x, y) => {
+                      scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+                    }
+                  );
+                  setTimeout(() => maximumInputRef.current?.focus(), 300);
+                }, 300);
+              }}
+            >
+              <Text style={[styles.dropdownButtonText, { textAlign: 'center', flex: 1, color: '#666' }]}>
+                Skip Tags →
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
         )}
 
-        {/* Selected Tags Pills */}
         {selectedTags.length > 0 && (
           <View style={styles.selectedTagsContainer}>
             {selectedTags.map((tag) => (
@@ -647,35 +783,66 @@ export default function CreateEvent() {
       </View>
 
       {/* Maximum Participants */}
-      <View style={styles.inputGroup}>
+      <View style={styles.inputGroup} ref={maximumViewRef} collapsable={false}>
         <Text style={styles.label}>Maximum Participants</Text>
         <TextInput
+          ref={maximumInputRef}
           style={styles.input}
           placeholder="e.g. 50"
           value={eventData.maximum}
           onChangeText={(value) => handleInputChange("maximum", value)}
           keyboardType="numeric"
+          returnKeyType="done"
+          onFocus={() => {
+            setTimeout(() => {
+              maximumViewRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                  // Scroll much higher to show both field and button above keyboard
+                  scrollViewRef.current?.scrollTo({ y: y - 50, animated: true });
+                }
+              );
+            }, 100);
+          }}
+          onSubmitEditing={() => {
+            setTimeout(() => {
+              submitButtonViewRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                  scrollViewRef.current?.scrollTo({ y: y + 100, animated: true });
+                }
+              );
+            }, 100);
+          }}
         />
       </View>
 
       {/* Submit Button */}
-      <TouchableOpacity
-        style={[styles.submitButton, isLoading && styles.disabledButton]}
-        onPress={handleSubmit}
-        disabled={isLoading || uploadingImage}
-      >
-        <Text style={styles.submitButtonText}>
-          {isLoading ? "Publishing..." : "Publish Event"}
-        </Text>
-      </TouchableOpacity>
+      <View ref={submitButtonViewRef} collapsable={false}>
+        <TouchableOpacity
+          style={[styles.submitButton, isLoading && styles.disabledButton]}
+          onPress={handleSubmit}
+          disabled={isLoading || uploadingImage}
+        >
+          <Text style={styles.submitButtonText}>
+            {isLoading ? "Publishing..." : "Publish Event"}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       <View style={styles.bottomSpacer} />
+
+      {/* Extra spacing to ensure content is scrollable above keyboard */}
+      <View style={{ height: 400 }} />
 
       {/* Calendar Modals */}
       <CalendarModal
         visible={showCalendar}
         selectedDate={eventData.date}
-        onDateSelect={handleDateSelect}
+        onDateSelect={(date) => {
+          handleDateSelect(date);
+          setTimeout(() => setShowTimePicker(true), 300);
+        }}
         onClose={() => setShowCalendar(false)}
         title="Select Event Date"
       />
@@ -683,7 +850,21 @@ export default function CreateEvent() {
       <CalendarModal
         visible={showDeadlineCalendar}
         selectedDate={eventData.registration_deadline}
-        onDateSelect={handleDeadlineSelect}
+        onDateSelect={(date) => {
+          handleDeadlineSelect(date);
+          setTimeout(() => {
+            setShowTagsDropdown(true);
+            // Scroll to tags section when dropdown opens
+            setTimeout(() => {
+              tagsViewRef.current?.measureLayout(
+                scrollViewRef.current,
+                (x, y) => {
+                  scrollViewRef.current?.scrollTo({ y: y - 50, animated: true });
+                }
+              );
+            }, 300);
+          }, 300);
+        }}
         onClose={() => setShowDeadlineCalendar(false)}
         title="Select Registration Deadline"
       />
@@ -692,7 +873,10 @@ export default function CreateEvent() {
       <TimePickerModal
         visible={showTimePicker}
         selectedTime={eventData.time}
-        onTimeSelect={handleTimeSelect}
+        onTimeSelect={(time) => {
+          handleTimeSelect(time);
+          setTimeout(() => showImageOptions(), 300);
+        }}
         onClose={() => setShowTimePicker(false)}
         title="Select Event Time"
       />
@@ -700,6 +884,7 @@ export default function CreateEvent() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -803,11 +988,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   imagePickerButton: {
-  backgroundColor: "#2196F3",
-  padding: 12,
-  borderRadius: 6,
-  alignItems: "center",
-  marginBottom: 10,
+    backgroundColor: "#2196F3",
+    padding: 12,
+    borderRadius: 6,
+    alignItems: "center",
+    marginBottom: 10,
   },
   imagePickerButtonText: {
     color: "#fff",
@@ -817,16 +1002,14 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 30,
   },
-
   datePickerButton: {
-  borderWidth: 1,
-  borderColor: "#ddd",
-  borderRadius: 6,
-  padding: 12,
-  backgroundColor: "#fafafa",
-  justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 6,
+    padding: 12,
+    backgroundColor: "#fafafa",
+    justifyContent: "center",
   },
-
   datePickerText: {
     fontSize: 16,
     color: "#333",
@@ -875,7 +1058,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 5,
-    overflow: 'hidden',
   },
   dropdownItem: {
     flexDirection: 'row',
