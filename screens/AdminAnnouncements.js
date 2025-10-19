@@ -63,7 +63,9 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 22,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     marginBottom: 20,
+    color: '#333',
   },
   input: {
     borderWidth: 1,
@@ -72,20 +74,21 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+    fontFamily: 'Baloo2-Regular',
   },
   textArea: {
     height: 120,
     textAlignVertical: 'top',
   },
   button: {
-    backgroundColor: '#ff9800',
+    backgroundColor: '#0055FF',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontFamily: 'Baloo2-ExtraBold',
   },
 });

@@ -12,6 +12,7 @@ import {
     ActivityIndicator,
     Modal
 } from "react-native";
+import { useFonts } from 'expo-font';
 import {supabase} from "../lib/supabase";
 import { Calendar } from 'react-native-calendars';
 
@@ -24,6 +25,7 @@ const AvailableTags = [
   "Welfare",
   "FOC",
   "Residential Affairs"];
+
 // Time Picker Modal Component
 const TimePickerModal = ({ visible, selectedTime, onTimeSelect, onClose, title = "Select Time" }) => {
   const parseTime = (timeStr) => {
@@ -197,6 +199,14 @@ const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "
 
 
 export default function EditEvent({ route, navigation }) {
+    // Load Baloo2 font
+    const [fontsLoaded] = useFonts({
+      'Baloo2-Regular': require('../assets/fonts/Baloo2-Regular.ttf'),
+      'Baloo2-Bold': require('../assets/fonts/Baloo2-Bold.ttf'),
+      'Baloo2-SemiBold': require('../assets/fonts/Baloo2-SemiBold.ttf'),
+      'Baloo2-Medium': require('../assets/fonts/Baloo2-Medium.ttf'),
+    });
+
     // Getting event ID from navigation params
     const { eventId } = route.params;
     const [showCalendar, setShowCalendar] = useState(false);
@@ -576,12 +586,14 @@ const fetchEventData = async () => {
     }
   };
 
-  // Show loading spinner while fetching event data
-  if (fetchingEvent) {
+  // Show loading spinner while fonts or event data is loading
+  if (!fontsLoaded || fetchingEvent) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4CAF50" />
-        <Text style={styles.loadingText}>Loading event data...</Text>
+        <Text style={styles.loadingText}>
+          {!fontsLoaded ? 'Loading fonts...' : 'Loading event data...'}
+        </Text>
       </View>
     );
   }
@@ -831,6 +843,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: "#666",
+    fontFamily: 'Baloo2-Regular',
   },
   header: {
     backgroundColor: "#fff",
@@ -841,13 +854,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
-    fontWeight: "bold",
+    fontFamily: 'Baloo2-Bold',
     color: "#333",
   },
   subtitle: {
     fontSize: 14,
     color: "#666",
     marginTop: 4,
+    fontFamily: 'Baloo2-Regular',
   },
   inputGroup: {
     backgroundColor: "#fff",
@@ -872,7 +886,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: 'Baloo2-SemiBold',
     marginBottom: 8,
     color: "#333",
   },
@@ -883,6 +897,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: "#fafafa",
+    fontFamily: 'Baloo2-Regular',
   },
   textArea: {
     height: 100,
@@ -893,6 +908,7 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 4,
     fontStyle: "italic",
+    fontFamily: 'Baloo2-Regular',
   },
   imagePreview: {
     marginTop: 10,
@@ -901,6 +917,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#666",
     marginBottom: 5,
+    fontFamily: 'Baloo2-Regular',
   },
   previewImage: {
     width: "100%",
@@ -944,12 +961,12 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: 'Baloo2-Bold',
   },
   updateButtonText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
+    fontFamily: 'Baloo2-Bold',
   },
   imagePickerButton: {
     backgroundColor: "#2196F3",
@@ -961,7 +978,7 @@ const styles = StyleSheet.create({
   imagePickerButtonText: {
     color: "#fff",
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: 'Baloo2-SemiBold',
   },
    bottomSpacer: {
     height: 30,
@@ -977,6 +994,7 @@ const styles = StyleSheet.create({
   datePickerText: {
     fontSize: 16,
     color: "#333",
+    fontFamily: 'Baloo2-Regular',
   },
   placeholderText: {
     color: "#999",
@@ -1003,7 +1021,7 @@ const styles = StyleSheet.create({
   dropdownButtonText: {
     fontSize: 15,
     color: '#333',
-    fontWeight: '500',
+    fontFamily: 'Baloo2-Medium',
   },
   dropdownIcon: {
     fontSize: 12,
@@ -1043,10 +1061,10 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 12,
     flex: 1,
-    fontWeight: '500',
+    fontFamily: 'Baloo2-Medium',
   },
   dropdownItemTextSelected: {
-    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     color: '#4CAF50',
   },
   checkbox: {
@@ -1088,7 +1106,7 @@ const styles = StyleSheet.create({
   tagPillText: {
     color: '#2e7d32',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
   },
   tagPillCloseBtn: {
     padding: 2,
@@ -1123,7 +1141,7 @@ const calendarStyles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
@@ -1150,12 +1168,12 @@ const calendarStyles = StyleSheet.create({
   },
   cancelButtonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     fontSize: 16,
   },
   confirmButtonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     fontSize: 16,
   },
   timePickerContainer: {
@@ -1180,7 +1198,7 @@ const calendarStyles = StyleSheet.create({
   },
   timeDisplayText: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#4CAF50',
   },
   pickerRow: {
@@ -1196,7 +1214,7 @@ const calendarStyles = StyleSheet.create({
   },
   pickerLabel: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     color: '#666',
     marginBottom: 10,
   },
@@ -1219,9 +1237,10 @@ const calendarStyles = StyleSheet.create({
   pickerOptionText: {
     fontSize: 18,
     color: '#333',
+    fontFamily: 'Baloo2-Regular',
   },
   pickerOptionTextSelected: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
   },
 });

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -144,7 +145,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#333',
     marginBottom: 4,
   },
@@ -155,6 +156,7 @@ const styles = StyleSheet.create({
   },
   info: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
     color: '#666',
     marginLeft: 4,
   },
@@ -168,12 +170,13 @@ const styles = StyleSheet.create({
   },
   participantCount: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#333',
     marginRight: 4,
   },
   statusLabel: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#666',
   },
   progressBarBackground: {
@@ -198,6 +201,6 @@ const styles = StyleSheet.create({
   badgeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
   },
 });

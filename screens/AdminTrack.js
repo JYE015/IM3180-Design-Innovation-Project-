@@ -36,7 +36,7 @@ export default function EventsTrackingScreen({ route }) {
 
       if (eventError) throw eventError;
 
-            // Fetch signups with user profile information using join
+      // Fetch signups with user profile information using join
       const { data: signupsData, error: signupsError } = await supabase
         .from('attendance')
         .select(`
@@ -198,10 +198,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     fontSize: 14,
   },
   errorText: {
+    fontFamily: 'Baloo2-SemiBold',
     color: '#92400E',
     fontSize: 16,
   },
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#1F2937',
     marginBottom: 12,
   },
@@ -242,12 +245,14 @@ const styles = StyleSheet.create({
   adminTrackingText: {
     fontSize: 14,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#FFFFFF', 
     textAlign: 'center',
   },
 
   eventDescription: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginBottom: 12,
     lineHeight: 20,
@@ -263,6 +268,7 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
     color: '#374151',
     flex: 1,
   },
@@ -281,10 +287,12 @@ const styles = StyleSheet.create({
   },
   tagText: {
     fontSize: 12,
+    fontFamily: 'Baloo2-SemiBold',
     color: '#1E40AF',
   },
   deadline: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginTop: 8,
     marginBottom: 8,
@@ -298,6 +306,7 @@ const styles = StyleSheet.create({
   attendeesTitle: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     color: '#1F2937',
     marginBottom: 8,
   },
@@ -307,10 +316,9 @@ const styles = StyleSheet.create({
     padding: 12,
     maxHeight: 200,
   },
-  // Row for each individual attendee
   attendeeRow: {
-    flexDirection: 'column',  // Stack each piece of info vertically
-    marginBottom: 12,  // Space between rows
+    flexDirection: 'column',
+    marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     paddingBottom: 12,
@@ -320,36 +328,35 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
     paddingRight: 8,
   },
-  // Styling for attendee's name
   attendeeUser: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Bold',
     color: '#374151',
     marginBottom: 4,  
     fontWeight: 'bold',
   },
-  // Styling for the date of registration
   attendeeDate: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginBottom: 4,  
   },
-  // Styling for the school info
   attendeeSchool: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginBottom: 4,
   },
-  // Styling for the course info
   attendeeCourse: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginBottom: 4,
   },
-  // Text for when no attendees are present
   noAttendees: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: '#6B7280',
     marginTop: 8,
   },
-  
 });

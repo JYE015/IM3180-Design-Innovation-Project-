@@ -900,10 +900,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    fontFamily: 'Baloo2-Bold',
     color: "#333",
   },
   subtitle: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
     color: "#666",
     marginTop: 4,
   },
@@ -931,6 +933,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: "600",
+    fontFamily: 'Baloo2-SemiBold',
     marginBottom: 8,
     color: "#333",
   },
@@ -940,6 +943,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 12,
     fontSize: 16,
+    fontFamily: 'Baloo2-Regular',
     backgroundColor: "#fafafa",
   },
   textArea: {
@@ -948,6 +952,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
+    fontFamily: 'Baloo2-Regular',
     color: "#666",
     marginTop: 4,
     fontStyle: "italic",
@@ -957,6 +962,7 @@ const styles = StyleSheet.create({
   },
   previewLabel: {
     fontSize: 14,
+    fontFamily: 'Baloo2-Regular',
     color: "#666",
     marginBottom: 5,
   },
@@ -986,6 +992,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
+    fontFamily: 'Baloo2-Bold',
   },
   imagePickerButton: {
     backgroundColor: "#2196F3",
@@ -998,6 +1005,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    fontFamily: 'Baloo2-SemiBold',
   },
   bottomSpacer: {
     height: 30,
@@ -1012,6 +1020,7 @@ const styles = StyleSheet.create({
   },
   datePickerText: {
     fontSize: 16,
+    fontFamily: 'Baloo2-Regular',
     color: "#333",
   },
   placeholderText: {
@@ -1038,6 +1047,7 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: {
     fontSize: 15,
+    fontFamily: 'Baloo2-Medium',
     color: '#333',
     fontWeight: '500',
   },
@@ -1075,6 +1085,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: 15,
+    fontFamily: 'Baloo2-Medium',
     color: '#333',
     marginLeft: 12,
     flex: 1,
@@ -1082,6 +1093,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemTextSelected: {
     fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     color: '#4CAF50',
   },
   checkbox: {
@@ -1124,6 +1136,7 @@ const styles = StyleSheet.create({
     color: '#2e7d32',
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
   },
   tagPillCloseBtn: {
     padding: 2,
@@ -1159,6 +1172,7 @@ const calendarStyles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
@@ -1183,11 +1197,13 @@ const calendarStyles = StyleSheet.create({
   cancelButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     fontSize: 16,
   },
   confirmButtonText: {
     color: 'white',
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     fontSize: 16,
   },
   timePickerContainer: {
@@ -1213,6 +1229,7 @@ const calendarStyles = StyleSheet.create({
   timeDisplayText: {
     fontSize: 32,
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
     color: '#4CAF50',
   },
   pickerRow: {
@@ -1229,6 +1246,7 @@ const calendarStyles = StyleSheet.create({
   pickerLabel: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Baloo2-SemiBold',
     color: '#666',
     marginBottom: 10,
   },
@@ -1250,10 +1268,12 @@ const calendarStyles = StyleSheet.create({
   },
   pickerOptionText: {
     fontSize: 18,
+    fontFamily: 'Baloo2-Regular',
     color: '#333',
   },
   pickerOptionTextSelected: {
     color: 'white',
     fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
   }
 });
