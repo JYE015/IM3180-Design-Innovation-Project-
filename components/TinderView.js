@@ -320,6 +320,7 @@ export default function TinderView({ events, searchQuery }) {
             <Text style={styles.eventTitle}>{currentEvent.title}</Text>
             <Text style={styles.eventDate}>
               {dayjs(currentEvent.date).format('D MMMM YYYY')}
+              {currentEvent.time ? `, ${currentEvent.time.slice(0, 5)} ${parseInt(currentEvent.time.slice(0, 2)) >= 12 ? 'PM' : 'AM'}` : ''}
             </Text>
             <Text style={styles.eventLocation}>{currentEvent.location}</Text>
           </LinearGradient>
@@ -329,7 +330,7 @@ export default function TinderView({ events, searchQuery }) {
             style={styles.detailsButton}
             onPress={() => navigation.navigate('EventPage', { id: currentEvent.id })}
           >
-            <Ionicons name="information-circle" size={50} color="#3478F6" />
+            <Ionicons name="information" size={30} color="white" />
           </TouchableOpacity>
         </Animated.View>
         
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   tagBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0055FE',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -485,13 +486,13 @@ const styles = StyleSheet.create({
   },
   eventDate: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 18,
     marginBottom: 4,
     fontFamily: 'Baloo2-SemiBold',
   },
   eventLocation: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Baloo2-SemiBold',
   },
   detailsButton: {
@@ -502,10 +503,17 @@ const styles = StyleSheet.create({
     width: 54,
     height: 54,
     borderRadius: 32,
+    backgroundColor: '#0055FE',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: 'transparent',
-    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+  },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   emptyContainer: {
     flex: 1,

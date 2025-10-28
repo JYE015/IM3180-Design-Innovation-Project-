@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
 
    details: {
-    fontSize: 15,
+    fontSize: 24,
     color: '#676767ff',
     fontFamily: 'Baloo2-SemiBold',
     marginVertical: 8,
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   },
 
    location: {
-    fontSize: 15,
+    fontSize: 24,
     color: '#2c2b2bff',
     fontFamily: 'Baloo2-SemiBold',
     marginHorizontal: 5,

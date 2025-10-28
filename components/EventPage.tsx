@@ -326,19 +326,32 @@ const isDeadlinePassed = useCallback(() => {
           <View style={styles.eventContainer}>
             <Text style={styles.title}>{event.Title}</Text>
             
-            <Text style={styles.dateTime}>
-              {dayjs(event.Date).format('ddd, D MMM YYYY')}
-              {event.Time ? ` · ${event.Time}` : ''}
-            </Text>
-          
-          <View style={styles.locationContainer}>
-              <Ionicons name="location" size={24} color="#666" />
-              <Text style={styles.locationText}>{event.Location}</Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar-outline" size={24} color="#666" />
+              <Text style={styles.infoText}>
+                {dayjs(event.Date).format('ddd, D MMM YYYY')}
+                {event.Time ? `, ${event.Time.slice(0, 5)} ${parseInt(event.Time.slice(0, 2)) >= 12 ? 'PM' : 'AM'}` : ''}
+              </Text>
             </View>
 
-            <Text style={styles.maxParticipants}>
-              Maximum Participants: {event.MaximumParticipants ?? 'NA'}
-            </Text>
+            <View style={styles.infoRow}>
+              <Ionicons name="location-outline" size={24} color="#666" />
+              <Text style={styles.infoText}>{event.Location}</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="time-outline" size={24} color="#666" />
+              <Text style={styles.infoText}>
+                Deadline: {dayjs(event.Deadline).format('D MMM YYYY')}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="people-outline" size={24} color="#666" />
+              <Text style={styles.infoText}>
+                Maximum Participants: {event.MaximumParticipants ?? 'NA'}
+              </Text>
+            </View>
 
             <View style={styles.separator} />
 
@@ -418,7 +431,7 @@ const styles = StyleSheet.create({
   },
   dateTime: {
     fontSize: 18,
-    color: '#666',
+    color: '#333',
     marginBottom: 16,
     fontFamily: 'Baloo2-Regular',
   },
@@ -429,13 +442,13 @@ const styles = StyleSheet.create({
   },
   locationText: {
     fontSize: 16,
-    color: '#666',
+    color: '#333',
     marginLeft: 8,
     fontFamily: 'Baloo2-Regular',
   },
   maxParticipants: {
     fontSize: 16,
-    color: '#666',
+    color: '#333',
     marginBottom: 16,
     fontFamily: 'Baloo2-Regular',
   },
@@ -521,5 +534,23 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.7,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  infoText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 12,
+    fontFamily: 'Baloo2-Regular',
+  },
+  deadlineText: {
+    fontSize: 16,
+    color: '#333',
+    marginLeft: 8,
+    fontFamily: 'Baloo2-Regular',
   },
 });

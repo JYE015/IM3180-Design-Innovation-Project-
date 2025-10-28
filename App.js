@@ -244,28 +244,46 @@ function LoginScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.circleButton,
-                styles.blueCircle,
                 role === "User" && styles.selectedCircle
               ]}
               onPress={() => setRole("User")}
               activeOpacity={0.8}
-            >
-              <Text style={styles.circleText}>USER</Text>
-            </TouchableOpacity>
+  >
+              <Ionicons 
+              name="person" 
+              size={24} 
+              color={role === "User" ? "#0055FE" : "#FFFFFF"} 
+           />
+          <Text style={[
+            styles.circleText,
+          { color: role === "User" ? "#0055FE" : "#FFFFFF" }
+        ]}>
+          User
+        </Text>
+      </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.circleButton,
-                styles.redCircle,
                 role === "Admin" && styles.selectedCircle
-              ]}
-              onPress={() => setRole("Admin")}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.circleText}>ADMIN</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+            ]}
+            onPress={() => setRole("Admin")}
+            activeOpacity={0.8}
+          >
+            <Ionicons 
+              name="shield-checkmark" 
+              size={24} 
+              color={role === "Admin" ? "#0055FE" : "#FFFFFF"} 
+            />
+           <Text style={[
+            styles.circleText,
+            { color: role === "Admin" ? "#0055FE" : "#FFFFFF" }
+          ]}>
+            Admin
+        </Text>
+      </TouchableOpacity>
+      </View>
+      </View>
 
         <Text style={styles.inputLabel}>Email</Text>
         <TextInput
@@ -408,47 +426,50 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 5,
   },
-  circleButtonRow: {
+   circleButtonRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
     marginBottom: 15,
+    paddingHorizontal: 0,
+    gap: 10, 
   },
   circleButton: {
-    width: 120,
+    flex: 0, 
     height: 50,
+    width: '48.5%', 
     borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center', // Center contents horizontally
+    alignItems: 'center', // Center contents vertically
+    paddingHorizontal: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-    borderWidth: 3,
-  },
-  blueCircle: {
-    backgroundColor: '#0055FF',
-    borderColor: '#1E40AF',
-  },
-  redCircle: {
-    backgroundColor: '#EF4444',
-    borderColor: '#B91C1C',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: '#0055FE',
+    backgroundColor: '#0055FE',
   },
   selectedCircle: {
-    borderWidth: 5,
-    borderColor: '#FFD700',
-    shadowOpacity: 0.6,
-    elevation: 12,
-    transform: [{ scale: 1.1 }],
+    backgroundColor: '#FFFFFF', // Selected state is white
+    borderWidth: 2,
+    borderColor: '#0055FE',
   },
   circleText: {
-    color: 'white',
-    fontSize: 20,
+    fontSize: 20, // Match the size of login/signup buttons
     fontFamily: 'Baloo2-ExtraBold',
     fontWeight: 'bold',
-    textAlign: 'center',
+    marginLeft: 8,
+  },
+  // Add new style for icon color
+  circleIcon: {
+    color: '#FFFFFF', // Default white for blue background
+  },
+  selectedCircleText: {
+    color: '#0055FE', // Blue text for selected state
   },
   inputLabel: {
     fontSize: 16,
@@ -510,10 +531,10 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   loginButton: {
-    backgroundColor: '#0055FF',
+    backgroundColor: '#0055FE',
   },
   signupButton: {
-    backgroundColor: '#10B981',
+    backgroundColor: '#0055FE',
   },
   buttonText: {
     color: 'white',

@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#4E8EF7',
+    backgroundColor: '#0055FE',
     borderRadius: 10,
     alignItems: 'center',   
     justifyContent: 'center',
@@ -675,7 +675,7 @@ const styles = StyleSheet.create({
   saveBtn: {
     marginTop: 18,
     height: 52,
-    backgroundColor: '#10B981',
+    backgroundColor: '#0055FE',
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
@@ -693,7 +693,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DBE7FF', 
     borderRadius: 14,
     borderLeftWidth: 5,
-    borderLeftColor: '#2563eb',
+    borderLeftColor: '#0055FE',
   },
   attendedEmpty: {
     color: '#666',
