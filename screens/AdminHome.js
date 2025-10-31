@@ -14,7 +14,7 @@ export default function AdminHome() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const navigation = useNavigation();
-  
+
   // Animation values
   const [announcementAnim] = useState(new Animated.Value(0));
   const [createEventAnim] = useState(new Animated.Value(0));
@@ -101,15 +101,36 @@ export default function AdminHome() {
     }, [])
   );
 
+  const filteredUpcoming = upcomingEvents.filter(event =>
+    searchQuery === '' ||
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredPast = pastEvents.filter(event =>
+    searchQuery === '' ||
+    event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    event.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={{ paddingHorizontal: 16, gap: 12 }}>
-        <TextInput 
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      {/* Search bar with icon + clear */}
+      <View style={styles.searchBar}>
+        <Ionicons name="search-outline" size={20} color="#8e8e93" style={styles.searchIcon} />
+        <TextInput
           style={styles.searchInput}
-          placeholder='Search events...'
+          placeholder="Search events..."
+          placeholderTextColor="#8e8e93"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          returnKeyType="search"
         />
+        {searchQuery ? (
+          <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <Ionicons name="close-circle" size={18} color="#c7c7cc" />
+          </TouchableOpacity>
+        ) : null}
       </View>
 
       {loading ? (
@@ -122,60 +143,45 @@ export default function AdminHome() {
         <View style={styles.contentContainer}>
           {/* Upcoming Events Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>
-              Upcoming Events
-            </Text>
-            <ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
-              {upcomingEvents
-                .filter(event => 
-                  searchQuery === '' || 
-                  event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  event.location.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map(event => (
-                  <AdminEventListItem 
-                    key={event.id} 
-                    event={event} 
-                    onPress={() => navigation.navigate('AdminEventPage', { event })}
-                  />
-                ))}
+            <Text style={styles.sectionHeader}>Upcoming Events</Text>
+            <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
+              {filteredUpcoming.map(event => (
+                <AdminEventListItem
+                  key={event.id}
+                  event={event}
+                  onPress={() => navigation.navigate('AdminEventPage', { event })}
+                />
+              ))}
             </ScrollView>
           </View>
 
           {/* Past Events Section */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>
-              Past Events
-            </Text>
-            <ScrollView horizontal={true} contentContainerStyle={styles.scrollContent}>
-              {pastEvents
-                .filter(event => 
-                  searchQuery === '' || 
-                  event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  event.location.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map(event => (
-                  <AdminEventListItem 
-                    key={event.id} 
-                    event={event} 
-                    onPress={() => navigation.navigate('AdminEventPage', { event })}
-                  />
-                ))}
+            <Text style={styles.sectionHeader}>Past Events</Text>
+            <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
+              {filteredPast.map(event => (
+                <AdminEventListItem
+                  key={event.id}
+                  event={event}
+                  onPress={() => navigation.navigate('AdminEventPage', { event })}
+                />
+              ))}
             </ScrollView>
           </View>
         </View>
       )}
 
+      {/* Floating action menu */}
       <Modal
         animationType="fade"
-        transparent={true}
+        transparent
         visible={isMenuVisible}
         onRequestClose={() => setIsMenuVisible(false)}
       >
-        <TouchableOpacity 
-          style={styles.modalOverlay} 
-          alignItems='centre'
-          activeOpacity={1} 
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          alignItems="centre"
+          activeOpacity={1}
           onPress={() => animateMenu(false)}
         >
           <View style={styles.menuContainer}>
@@ -188,7 +194,7 @@ export default function AdminHome() {
               }],
               opacity: announcementAnim
             }}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.menuItem, { backgroundColor: '#ff9800', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
@@ -209,7 +215,7 @@ export default function AdminHome() {
               }],
               opacity: createEventAnim
             }}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.menuItem, { backgroundColor: '#4CAF50', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
@@ -224,7 +230,7 @@ export default function AdminHome() {
         </TouchableOpacity>
       </Modal>
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fab, isMenuVisible && styles.fabActive]}
         onPress={() => animateMenu(!isMenuVisible)}
       >
@@ -248,6 +254,38 @@ const styles = StyleSheet.create({
     flex: 1, 
     backgroundColor: '#fff' 
   },
+
+  /** Search bar **/
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginTop: 8,
+    marginBottom: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#f5f5f7',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e5e5ea',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#333',
+    fontFamily: 'Baloo2-Regular',
+    paddingVertical: 0,
+  },
+
+  /** Empty/message **/
   messageContainer: { 
     flex: 1, 
     justifyContent: 'center', 
@@ -260,19 +298,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Baloo2-Regular',
   },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#fff',
-    marginBottom: 8,
-    fontFamily: 'Baloo2-Regular',
-  },
+
+  /** Sections & lists **/
   contentContainer: {
     flex: 1,
-    gap: 20
+    gap: 16,
   },
   section: {
     flex: 1
@@ -280,7 +310,7 @@ const styles = StyleSheet.create({
   sectionHeader: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 10,
     paddingHorizontal: 16,
     color: '#333',
     fontFamily: 'Baloo2-Bold',
@@ -289,6 +319,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16
   },
+
+  /** FAB & menu **/
   fab: {
     position: 'absolute',
     alignSelf: 'center',
@@ -302,13 +334,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
+  fabActive: { backgroundColor: '#f44336' },
+
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -323,10 +354,7 @@ const styles = StyleSheet.create({
     padding: 8,
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     gap: 8
@@ -344,7 +372,4 @@ const styles = StyleSheet.create({
     color: '#333',
     fontFamily: 'Baloo2-Bold',
   },
-  fabActive: {
-    backgroundColor: '#f44336'
-  }
 });

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, ScrollView, Modal, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import dayjs from 'dayjs';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function AdminEventPage({ route, navigation }) {
   const { event } = route.params;
@@ -20,6 +22,7 @@ export default function AdminEventPage({ route, navigation }) {
   });
   const [attendeesList, setAttendeesList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
 
   const fetchEventDetails = async () => {
     if (!event?.id) return;
@@ -157,13 +160,20 @@ export default function AdminEventPage({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Event Image */}
+        {/* Event Image - Now Touchable */}
         {evt?.image_url ? (
-          <Image
-            source={{ uri: evt.image_url }}
-            style={styles.eventImage}
-            resizeMode="cover"
-          />
+          <TouchableOpacity onPress={() => setImageModalVisible(true)} activeOpacity={0.9}>
+            <Image
+              source={{ uri: evt.image_url }}
+              style={styles.eventImage}
+              resizeMode="cover"
+            />
+            {/* Touch to Expand Icon Overlay */}
+            <View style={styles.expandIconOverlay}>
+              <Ionicons name="expand-outline" size={24} color="#FFF" />
+              <Text style={styles.expandText}>Tap to expand</Text>
+            </View>
+          </TouchableOpacity>
         ) : (
           <View style={[styles.eventImage, styles.placeholderImage]}>
             <Ionicons name="image-outline" size={48} color="#9CA3AF" />
@@ -266,6 +276,30 @@ export default function AdminEventPage({ route, navigation }) {
           </View>
         </View>
       </ScrollView>
+
+      {/* Image Enlargement Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity 
+            style={styles.modalCloseButton}
+            onPress={() => setImageModalVisible(false)}
+          >
+            <Ionicons name="close" size={32} color="#FFF" />
+          </TouchableOpacity>
+          {evt?.image_url && (
+            <Image
+              source={{ uri: evt.image_url }}
+              style={styles.enlargedImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -301,6 +335,24 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 250,
     backgroundColor: '#F3F4F6',
+  },
+  expandIconOverlay: {
+    position: 'absolute',
+    bottom: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  expandText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontFamily: 'Baloo2-SemiBold',
+    fontWeight: '600',
   },
   placeholderImage: {
     justifyContent: 'center',
@@ -456,5 +508,25 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 12,
     fontFamily: 'Baloo2-Regular',
+  },
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    padding: 10,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 25,
+  },
+  enlargedImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
   },
 });

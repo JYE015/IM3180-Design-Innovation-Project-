@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -89,13 +88,6 @@ export default function AdminEventListItem({ event, onPress }) {
           </View>
         </View>
       </View>
-
-      {/* Status Badge */}
-      {isPastEvent() && (
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Past</Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 }
@@ -104,10 +96,12 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#fff',
     borderRadius: 12,
+    marginTop: -10,
     marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 12,
-    flexDirection: 'row',
+    marginVertical: 60,
+    padding: 10,
+    flexDirection: 'row',  // Change from 'row' to 'column'
+    height: 170,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -121,8 +115,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   imageContainer: {
-    width: 80,
-    height: 80,
+    width: 100,
+    height: 100,
     borderRadius: 8,
     overflow: 'hidden',
     backgroundColor: '#f5f5f5',
@@ -141,41 +135,42 @@ const styles = StyleSheet.create({
   details: {
     flex: 1,
     marginLeft: 12,
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontFamily: 'Baloo2-Bold',
     color: '#333',
-    marginBottom: 4,
+    marginBottom: 0,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 1,
+    marginTop: 1,
   },
   info: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Baloo2-Regular',
     color: '#666',
     marginLeft: 4,
   },
   statusContainer: {
-    marginTop: 4,
+    marginTop: 1,
   },
   statusInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 1,
   },
   participantCount: {
-    fontSize: 14,
+    fontSize: 15,
     fontFamily: 'Baloo2-Bold',
     color: '#333',
     marginRight: 4,
   },
   statusLabel: {
-    fontSize: 12,
+    fontSize: 14,
     fontFamily: 'Baloo2-Regular',
     color: '#666',
   },
@@ -188,19 +183,5 @@ const styles = StyleSheet.create({
   progressBar: {
     height: '100%',
     borderRadius: 2,
-  },
-  badge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#666',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontFamily: 'Baloo2-Bold',
   },
 });
