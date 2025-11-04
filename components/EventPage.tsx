@@ -242,57 +242,66 @@ export default function EventPage() {
 
   // Function to cancel RSVP
   const cancelRSVP = async () => {
-    if (!currentUser || !attendance) {
-      Alert.alert('Error', 'Could not find your registration');
-      return;
-    }
+  if (!currentUser || !attendance) {
+    Alert.alert('Error', 'Could not find your registration');
+    return;
+  }
 
-    // Show confirmation dialog
-    Alert.alert(
-      'Cancel Registration',
-      'Are you sure you want to cancel your registration for this event?',
-      [
-        {
-          text: 'No',
-          style: 'cancel',
-        },
-        {
-          text: 'Yes',
-          onPress: async () => {
-            setRegistering(true);
+  // Show confirmation dialog
+  Alert.alert(
+    'Cancel Registration',
+    'Are you sure you want to cancel your registration for this event?',
+    [
+      {
+        text: 'No',
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          setRegistering(true);
+          
+          try {
+            console.log('Attempting to cancel RSVP with attendance record:', JSON.stringify(attendance));
             
-            try {
-              console.log('Attempting to cancel RSVP with attendance record:', JSON.stringify(attendance));
-              console.log('User ID:', currentUser.id, 'Event ID:', event.id);
-              
-              // First, log the attendance record type
-              console.log('Attendance ID type:', typeof attendance.id);
-              console.log('Attendance event type:', typeof attendance.event);
-              console.log('Attendance user type:', typeof attendance.user);
-              
-              // Approach 1: Use the exact ID
-              console.log('Trying approach 1: Delete by exact ID');
-              const { error: deleteError1 } = await supabase
-                .from('attendance')
-                .delete()
-                .eq('id', attendance.id);
+            // Delete the attendance record
+            const { error: deleteError } = await supabase
+              .from('attendance')
+              .delete()
+              .eq('id', attendance.id);
                 
-              // 3. We've already updated the UI state at the start of the function
-              console.log('UI state already updated to show cancellation');
-            
-              Alert.alert('Success', 'Your registration has been canceled.');
-            } catch (error) {
-              console.error('Error canceling registration:', error);
+            if (deleteError) {
+              console.error('Error deleting attendance:', deleteError);
               Alert.alert('Error', 'Could not cancel your registration. Please try again.');
-            } finally {
-              setRegistering(false);
+              return;
             }
-          },
+
+            // IMMEDIATE UI UPDATE - Update state immediately after successful deletion
+            setAttendance(null);
+            setIsRegistered(false);
+            setIsEventFull(false); // Reset event full status in case it was full
+            
+            // Update event participant count immediately if available
+            if (event && event.CurrentParticipants !== null && event.CurrentParticipants !== undefined && event.CurrentParticipants > 0) {
+              setEvent(prev => prev ? {
+                ...prev,
+                CurrentParticipants: Math.max(0, (prev.CurrentParticipants || 0) - 1)
+              } : prev);
+            }
+            
+            Alert.alert('Success', 'Your registration has been canceled.');
+          } catch (error) {
+            console.error('Error canceling registration:', error);
+            Alert.alert('Error', 'Could not cancel your registration. Please try again.');
+          } finally {
+            setRegistering(false);
+          }
         },
-      ],
-      { cancelable: true }
-    );
-  };
+      },
+    ],
+    { cancelable: true }
+  );
+};
 
 const isDeadlinePassed = useCallback(() => {
   if (!event?.Deadline) return false;
