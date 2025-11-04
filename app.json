@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "newfile",
-    "slug": "newfile",
+    "name": "Hubble",
+    "slug": "Hubble",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/hubble_image.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
