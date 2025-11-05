@@ -56,12 +56,12 @@ export default function EventHome() {
     // Filters
     if (filter === 'Upcoming') query = query.gte('Date', today);
     if (filter === 'Past')     query = query.lt('Date', today);
-    if (filter === 'Online')   query = query.ilike('Location', '%online%');
-    if (filter === 'In-person')query = query.not('Location', 'ilike', '%online%');
+    if (filter === 'Online')   query = query.ilike('Location', '%online%').gte('Date', today);;
+    if (filter === 'In-person')query = query.not('Location', 'ilike', '%online%').gte('Date', today);;
 
 // Tag filtering - will match if the tag appears anywhere in the Tags field
   if (["Workshop", "Academic",  "Sports","Cultural","Welfare","FOC", "Residential Affairs"].includes(filter)) {
-    query = query.ilike('Tags', `%${filter}%`);
+    query = query.ilike('Tags', `%${filter}%`).gte('Date', today);;
   }
     
     // Special handling for "My Events" filter which requires post-fetch filtering
@@ -90,7 +90,7 @@ export default function EventHome() {
 
     // If "My Events" filter is active, only show events the user has registered for
     if (isMyEventsFilter && myEventIds.length > 0) {
-      normalized = normalized.filter(event => myEventIds.includes(event.id));
+      normalized = normalized.filter(event => myEventIds.includes(event.id) && event.date >= today);
     }
 
     setEvents(normalized);
