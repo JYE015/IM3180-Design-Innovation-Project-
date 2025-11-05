@@ -1,8 +1,9 @@
 # Hubble
 
+<img width="3780" height="1134" alt="Hubble Logo Banner (2)" src="https://github.com/user-attachments/assets/4974a126-d9dd-4f92-9c5a-3376712da7bb" />
+
 
 Welcome to Hubble 🫧, a student-centric platform designed to make event discovery and management seamless for the NTU community.  
-
 
 The app simplifies how **students** browse and register for events, and how **organizers** handle announcements and attendance - all within one platform.
 
