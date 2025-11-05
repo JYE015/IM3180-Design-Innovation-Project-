@@ -20,7 +20,7 @@ import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-// ✅ NEW: Import useTinderView
+//  Import useTinderView
 import { useTinderView } from '../context/TinderViewContext';
 
 const formatEventDateTime = (dateStr, timeStr) => {
@@ -41,7 +41,7 @@ const isPastEvent = (dateStr, timeStr) => {
 export default function UserProfile() {
   const navigation = useNavigation();
   
-  // ✅ NEW: Get reset function from context
+  // Get reset function from context
   const { resetTinderView } = useTinderView();
   
   const [loading, setLoading] = useState(true);
@@ -208,7 +208,7 @@ export default function UserProfile() {
                 return;
               }
               
-              // ✅ NEW: Reset TinderView position on logout
+              // Reset TinderView position on logout
               resetTinderView();
               
               const parentNavigator = navigation.getParent();
