@@ -13,8 +13,11 @@ import {
   Platform,
 } from 'react-native';
 import { supabase } from './lib/supabase';
+
+// Add font loading import
 import * as Font from 'expo-font';
 
+// React Navigation
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -33,14 +36,20 @@ import AdminEventListItem from './components/AdminEventListItem';
 import EditEvent from './screens/EditEvent';
 import AdminEventPage from './components/AdminEventPage';
 import AdminTrack from './screens/AdminTrack';
+
+// ✅ Import Announcements
 import Announcements from './screens/Announcements';
+
+// ✅ Import AdminAnnouncements
 import AdminAnnouncements from './screens/AdminAnnouncements';
 
+// Import icons
 import { Ionicons } from '@expo/vector-icons';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Bottom Tab Navigator for main app screens
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -66,38 +75,60 @@ function MainTabs() {
           paddingBottom: 5,
           height: 60,
           backgroundColor: '#B8C4FE',
-          borderTopWidth: 0,
+          borderTopWidth: 0, 
         },
         headerShown: false,
         unmountOnBlur: false,
       })}
     >
-      <Tab.Screen name="Home" component={EventHome} options={{ title: 'Home' }} />
-      <Tab.Screen name="Calendar" component={Calendar} options={{ title: 'Calendar' }} />
-      <Tab.Screen name="Announcements" component={Announcements} options={{ title: 'Inbox' }} />
-      <Tab.Screen name="Profile" component={UserProfile} options={{ title: 'Profile' }} />
+      <Tab.Screen
+        name="Home"
+        component={EventHome}
+        options={{ title: 'Home' }}
+      />
+
+      <Tab.Screen
+        name="Calendar"
+        component={Calendar}
+        options={{ title: 'Calendar' }}
+      />
+
+      <Tab.Screen
+        name="Announcements"
+        component={Announcements}
+        options={{ title: 'Inbox' }}
+      />
+
+      <Tab.Screen
+        name="Profile"
+        component={UserProfile}
+        options={{ title: 'Profile' }}
+      />
     </Tab.Navigator>
   );
 }
 
 function LoginScreen({ navigation }) {
+  // ✅ NEW: Get reset function from context
   const { resetTinderView } = useTinderView();
-
+  
   const [role, setRole] = useState("User");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  
   const passwordInputRef = useRef(null);
 
-  const ADMIN_EMAIL = "admin@gmail.com";
+  // ❗ Admin password only; email must be @e.ntu.edu.sg
   const ADMIN_PASSWORD = "000000";
-
-  useEffect(() => {
-    resetTinderView();
-  }, []);
 
   // ✅ NTU email validator
   const isNtuEmail = (e) =>
     /^[A-Za-z0-9._%+-]+@e\.ntu\.edu\.sg$/i.test((e || '').trim());
+
+  // ✅ NEW: Reset TinderView when login screen mounts
+  useEffect(() => {
+    resetTinderView();
+  }, []);
 
   // ---------------- SIGN UP FUNCTION ----------------
   const handleSignup = async () => {
@@ -142,6 +173,7 @@ function LoginScreen({ navigation }) {
       Alert.alert("Success!", "Account created. Please verify your email.");
       setEmail("");
       setPassword("");
+
     } catch (error) {
       console.log('Unexpected signup error:', error);
       Alert.alert("Unexpected Error", error.message);
@@ -155,26 +187,28 @@ function LoginScreen({ navigation }) {
       return false;
     }
 
+    // 🔒 Enforce NTU email for BOTH roles
+    if (!isNtuEmail(email)) {
+      Alert.alert("Invalid Email", "Please log in using your NTU student email (@e.ntu.edu.sg).");
+      return false;
+    }
+
     try {
       if (role === "Admin") {
-        if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        // Admin path: NTU email required + admin password check
+        if (password === ADMIN_PASSWORD) {
           Alert.alert("Welcome Admin!", "You have successfully logged in as Hall 5 Admin.");
           setEmail("");
           setPassword("");
           navigation.navigate('AdminHome');
           return true;
         } else {
-          Alert.alert("Access Denied", "Invalid admin credentials.");
+          Alert.alert("Access Denied", "Invalid admin password.");
           return false;
         }
       }
 
-      // ✅ Enforce NTU email for users
-      if (!isNtuEmail(email)) {
-        Alert.alert("Invalid Email", "Please log in using your NTU student email (@e.ntu.edu.sg).");
-        return false;
-      }
-
+      // User path
       const { data: userData, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password: password,
@@ -192,6 +226,7 @@ function LoginScreen({ navigation }) {
 
       navigation.navigate('MainTabs');
       return true;
+
     } catch (error) {
       console.log('Unexpected login error:', error);
       Alert.alert("Unexpected Error", error.message);
@@ -201,7 +236,7 @@ function LoginScreen({ navigation }) {
 
   // ---------- UI ----------
   return (
-    <KeyboardAvoidingView
+    <KeyboardAvoidingView 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
@@ -221,41 +256,43 @@ function LoginScreen({ navigation }) {
         <View style={styles.newRoleContainer}>
           <View style={styles.circleButtonRow}>
             <TouchableOpacity
-              style={[styles.circleButton, role === "User" && styles.selectedCircle]}
+              style={[
+                styles.circleButton,
+                role === "User" && styles.selectedCircle
+              ]}
               onPress={() => setRole("User")}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="person"
-                size={24}
-                color={role === "User" ? "#0055FE" : "#FFFFFF"}
+              <Ionicons 
+                name="person" 
+                size={24} 
+                color={role === "User" ? "#0055FE" : "#FFFFFF"} 
               />
-              <Text
-                style={[
-                  styles.circleText,
-                  { color: role === "User" ? "#0055FE" : "#FFFFFF" },
-                ]}
-              >
+              <Text style={[
+                styles.circleText,
+                { color: role === "User" ? "#0055FE" : "#FFFFFF" }
+              ]}>
                 User
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.circleButton, role === "Admin" && styles.selectedCircle]}
+              style={[
+                styles.circleButton,
+                role === "Admin" && styles.selectedCircle
+              ]}
               onPress={() => setRole("Admin")}
               activeOpacity={0.8}
             >
-              <Ionicons
-                name="shield-checkmark"
-                size={24}
-                color={role === "Admin" ? "#0055FE" : "#FFFFFF"}
+              <Ionicons 
+                name="shield-checkmark" 
+                size={24} 
+                color={role === "Admin" ? "#0055FE" : "#FFFFFF"} 
               />
-              <Text
-                style={[
-                  styles.circleText,
-                  { color: role === "Admin" ? "#0055FE" : "#FFFFFF" },
-                ]}
-              >
+              <Text style={[
+                styles.circleText,
+                { color: role === "Admin" ? "#0055FE" : "#FFFFFF" }
+              ]}>
                 Admin
               </Text>
             </TouchableOpacity>
@@ -265,9 +302,7 @@ function LoginScreen({ navigation }) {
         <Text style={styles.inputLabel}>Email</Text>
         <TextInput
           style={styles.input}
-          placeholder={
-            role === "Admin" ? "Admin Email" : "Your @e.ntu.edu.sg Email"
-          }
+          placeholder={role === "Admin" ? "Admin @e.ntu.edu.sg Email" : "Your @e.ntu.edu.sg Email"}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
@@ -342,14 +377,7 @@ export default function App() {
 
   if (!fontsLoaded) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: '#f5f5f5',
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f5f5f5' }}>
         <Text>Loading...</Text>
       </View>
     );
@@ -367,19 +395,19 @@ export default function App() {
           <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
           <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ headerShown: false }} />
           <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
-          <Stack.Screen
-            name="TinderView"
-            component={TinderView}
-            options={{
+          <Stack.Screen 
+            name="TinderView" 
+            component={TinderView} 
+            options={{ 
               title: 'Event Home',
-              unmountOnBlur: false,
-            }}
+              unmountOnBlur: false
+            }} 
           />
           <Stack.Screen name="AdminTrack" component={AdminTrack} options={{ title: 'Track Event' }} />
-          <Stack.Screen
-            name="AdminAnnouncements"
-            component={AdminAnnouncements}
-            options={{ title: 'Admin Announcements' }}
+          <Stack.Screen 
+            name="AdminAnnouncements" 
+            component={AdminAnnouncements} 
+            options={{ title: 'Admin Announcements' }} 
           />
         </Stack.Navigator>
       </NavigationContainer>
@@ -403,24 +431,32 @@ const styles = StyleSheet.create({
   },
   newRoleContainer: {
     width: '100%',
-    alignItems: 'center',
+    alignItems: 'center',  
   },
-  circleButtonRow: {
+  roleLabel: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontFamily: 'Baloo2-Bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+   circleButtonRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
     marginBottom: 15,
-    gap: 10,
+    paddingHorizontal: 0,
+    gap: 10, 
   },
   circleButton: {
-    flex: 0,
+    flex: 0, 
     height: 50,
-    width: '48.5%',
+    width: '48.5%', 
     borderRadius: 15,
     flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center', // Center contents horizontally
+    alignItems: 'center', // Center contents vertically
     paddingHorizontal: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -432,15 +468,22 @@ const styles = StyleSheet.create({
     backgroundColor: '#0055FE',
   },
   selectedCircle: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFFFFF', // Selected state is white
     borderWidth: 2,
     borderColor: '#0055FE',
   },
   circleText: {
-    fontSize: 20,
+    fontSize: 20, // Match the size of login/signup buttons
     fontFamily: 'Baloo2-ExtraBold',
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  // Add new style for icon color
+  circleIcon: {
+    color: '#FFFFFF', // Default white for blue background
+  },
+  selectedCircleText: {
+    color: '#0055FE', // Blue text for selected state
   },
   inputLabel: {
     fontSize: 16,
@@ -468,6 +511,20 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  adminInfo: {
+    backgroundColor: '#FFF3CD',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 15,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#FFE69C',
+  },
+  adminInfoText: {
+    fontSize: 14,
+    color: '#856404',
+    marginBottom: 2,
+  },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -487,8 +544,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  loginButton: { backgroundColor: '#0055FE' },
-  signupButton: { backgroundColor: '#0055FE' },
+  loginButton: {
+    backgroundColor: '#0055FE',
+  },
+  signupButton: {
+    backgroundColor: '#0055FE',
+  },
   buttonText: {
     color: 'white',
     fontSize: 20,
