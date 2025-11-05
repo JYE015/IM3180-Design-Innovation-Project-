@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
   /** Sections & lists **/
   contentContainer: {
     flex: 1,
-    gap: 16,
+    gap: 15,
   },
   section: {
     flex: 1
