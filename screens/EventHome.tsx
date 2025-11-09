@@ -89,13 +89,22 @@ export default function EventHome() {
     }));
 
     // If "My Events" filter is active, only show events the user has registered for
-    if (isMyEventsFilter && myEventIds.length > 0) {
-      normalized = normalized.filter(event => myEventIds.includes(event.id) && event.date >= today);
+    if (isMyEventsFilter) {
+      if (myEventIds.length === 0) {
+        // No registered events - set empty array
+        normalized = [];
+      } else {
+        // Filter to show only registered upcoming events
+        const today = dayjs().startOf('day');
+        normalized = normalized.filter(event =>
+          myEventIds.includes(event.id) &&
+          (dayjs(event.date).isAfter(today) || dayjs(event.date).isSame(today, 'day'))
+        );
+      }
     }
-
-    setEvents(normalized);
-    setLoading(false);
-  };
+      setEvents(normalized);
+      setLoading(false);
+    };
 
   // Fetch current user
   const fetchCurrentUser = async () => {
