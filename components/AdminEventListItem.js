@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: -10,
     marginHorizontal: 16,
-    marginVertical: 60,
+    marginVertical: 8,
     padding: 10,
     flexDirection: 'row',  // Change from 'row' to 'column'
     height: 170,

@@ -195,7 +195,7 @@ export default function AdminHome() {
               opacity: announcementAnim
             }}>
               <TouchableOpacity
-                style={[styles.menuItem, { backgroundColor: '#ff9800', borderRadius: 8 }]}
+                style={[styles.menuItem, { backgroundColor: '#FF5D53', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
                   navigation.navigate('AdminAnnouncements');
@@ -216,7 +216,7 @@ export default function AdminHome() {
               opacity: createEventAnim
             }}>
               <TouchableOpacity
-                style={[styles.menuItem, { backgroundColor: '#4CAF50', borderRadius: 8 }]}
+                style={[styles.menuItem, { backgroundColor: '#0055FE', borderRadius: 8 }]}
                 onPress={() => {
                   animateMenu(false);
                   navigation.navigate('AdminPage');
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
-    marginTop: 8,
+    marginTop: 20,
     marginBottom: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -303,9 +303,11 @@ const styles = StyleSheet.create({
   contentContainer: {
     flex: 1,
     gap: 15,
+    marginTop: 40,
   },
   section: {
-    flex: 1
+    flex: 1,
+    marginBottom: -40,
   },
   sectionHeader: {
     fontSize: 18,
@@ -329,7 +331,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4E8EF7',
+    backgroundColor: '#0055FE',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,

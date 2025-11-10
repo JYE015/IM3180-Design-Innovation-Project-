@@ -177,7 +177,7 @@ const CalendarModal = ({ visible, selectedDate, onDateSelect, onClose, title = "
           <Calendar
             onDayPress={handleDayPress}
             markedDates={{
-              [selected]: { selected: true, selectedColor: '#4CAF50' }
+              [selected]: { selected: true, selectedColor: '#0055FE' }
             }}
             minDate={new Date().toISOString().split('T')[0]}
           />
@@ -973,7 +973,7 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   submitButton: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#0055FE",
     padding: 18,
     borderRadius: 8,
     alignItems: "center",
@@ -995,7 +995,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Baloo2-Bold',
   },
   imagePickerButton: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#0055FE",
     padding: 12,
     borderRadius: 6,
     alignItems: "center",
@@ -1032,7 +1032,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 14,
-    backgroundColor: '#fff',
+    backgroundColor: '#fafafa',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1081,7 +1081,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   dropdownItemSelected: {
-    backgroundColor: '#f0f8f4',
+    backgroundColor: '#dfeafc',
   },
   dropdownItemText: {
     fontSize: 15,
@@ -1094,7 +1094,7 @@ const styles = StyleSheet.create({
   dropdownItemTextSelected: {
     fontWeight: '600',
     fontFamily: 'Baloo2-SemiBold',
-    color: '#4CAF50',
+    color: '#0055FE',
   },
   checkbox: {
     width: 18,
@@ -1107,8 +1107,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   checkboxSelected: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#0055FE',
+    borderColor: '#0055FE',
   },
   checkmark: {
     color: '#fff',
@@ -1122,9 +1122,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagPill: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#dfeafc',
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#0055FE',
     borderRadius: 16,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -1133,7 +1133,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tagPillText: {
-    color: '#2e7d32',
+    color: '#0055FE',
     fontSize: 13,
     fontWeight: '600',
     fontFamily: 'Baloo2-SemiBold',
@@ -1142,7 +1142,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   tagPillClose: {
-    color: '#2e7d32',
+    color: '#0055FE',
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 18,
@@ -1192,7 +1192,7 @@ const calendarStyles = StyleSheet.create({
     backgroundColor: '#757575',
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0055FE',
   },
   cancelButtonText: {
     color: 'white',
@@ -1230,7 +1230,7 @@ const calendarStyles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     fontFamily: 'Baloo2-Bold',
-    color: '#4CAF50',
+    color: '#0055FE',
   },
   pickerRow: {
     flexDirection: 'row',
@@ -1264,7 +1264,7 @@ const calendarStyles = StyleSheet.create({
     marginVertical: 2,
   },
   pickerOptionSelected: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0055FE',
   },
   pickerOptionText: {
     fontSize: 18,

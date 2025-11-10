@@ -944,7 +944,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   updateButton: {
-    backgroundColor: "#FF9800",
+    backgroundColor: "#0055FE",
     padding: 18,
     borderRadius: 8,
     alignItems: "center",
@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   disabledButton: {
-    backgroundColor: "#cccccc",
+    backgroundColor: "#8c8c8c",
   },
   cancelButtonText: {
     color: "#fff",
@@ -969,7 +969,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Baloo2-Bold',
   },
   imagePickerButton: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#0055FE",
     padding: 12,
     borderRadius: 6,
     alignItems: "center",
@@ -1065,7 +1065,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemTextSelected: {
     fontFamily: 'Baloo2-SemiBold',
-    color: '#4CAF50',
+    color: '#0055FE',
   },
   checkbox: {
     width: 18,
@@ -1078,8 +1078,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   checkboxSelected: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
+    backgroundColor: '#0055FE',
+    borderColor: '#0055FE',
   },
   checkmark: {
     color: '#fff',
@@ -1093,9 +1093,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tagPill: {
-    backgroundColor: '#e8f5e9',
+    backgroundColor: '#ffffffff',
     borderWidth: 1,
-    borderColor: '#4CAF50',
+    borderColor: '#0055FE',
     borderRadius: 16,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -1104,7 +1104,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   tagPillText: {
-    color: '#2e7d32',
+    color: '#0055FE',
     fontSize: 13,
     fontFamily: 'Baloo2-SemiBold',
   },
@@ -1112,7 +1112,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   tagPillClose: {
-    color: '#2e7d32',
+    color: '#0055FE',
     fontSize: 18,
     fontWeight: 'bold',
     lineHeight: 18,
@@ -1161,10 +1161,10 @@ const calendarStyles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButton: {
-    backgroundColor: '#757575',
+    backgroundColor: '#8c8c8c',
   },
   confirmButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0055FE',
   },
   cancelButtonText: {
     color: 'white',
@@ -1199,7 +1199,7 @@ const calendarStyles = StyleSheet.create({
   timeDisplayText: {
     fontSize: 32,
     fontFamily: 'Baloo2-Bold',
-    color: '#4CAF50',
+    color: '#0055FE',
   },
   pickerRow: {
     flexDirection: 'row',
@@ -1232,7 +1232,7 @@ const calendarStyles = StyleSheet.create({
     marginVertical: 2,
   },
   pickerOptionSelected: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#0055FE',
   },
   pickerOptionText: {
     fontSize: 18,

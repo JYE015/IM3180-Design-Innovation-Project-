@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   adminTrackingContainer: {
-    backgroundColor: '#3B82F6', 
+    backgroundColor: '#0055FE', 
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 15, 
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontFamily: 'Baloo2-SemiBold',
-    color: '#1E40AF',
+    color: '#0055FE',
   },
   deadline: {
     fontSize: 12,

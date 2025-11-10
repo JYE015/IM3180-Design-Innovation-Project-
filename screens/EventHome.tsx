@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'absolute',
     right: 20,
-    top: 5,
+    top: 8.5,
   },
   logoImage: {
     width: '90%',

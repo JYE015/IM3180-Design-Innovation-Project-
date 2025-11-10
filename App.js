@@ -389,12 +389,67 @@ export default function App() {
         <Stack.Navigator>
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="MainTabs" component={MainTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="EventPage" component={EventPage} options={{ title: 'Event Details' }} />
-          <Stack.Screen name="AdminPage" component={CreateEvent} options={{ title: 'Event Details' }} />
-          <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: 'Admin Home' }} />
+          <Stack.Screen 
+            name="EventPage" 
+            component={EventPage} 
+            options={{ 
+              title: 'Event Details',
+              headerBackTitle: 'Back',
+              headerTitleStyle: {
+                fontFamily: 'Baloo2-Bold',
+              },
+              headerBackTitleStyle: {
+                fontFamily: 'Baloo2-Regular',
+              },
+            }} 
+          />
+          <Stack.Screen 
+            name="AdminPage" 
+            component={CreateEvent} 
+            options={{ 
+              title: 'Event Details',
+              headerBackTitle: 'Back',
+              headerTitleStyle: {
+                fontFamily: 'Baloo2-Bold',
+              },
+              headerBackTitleStyle: {
+                fontFamily: 'Baloo2-Regular',
+              },
+            }} 
+          />
+          <Stack.Screen 
+            name="AdminHome" 
+            component={AdminHome} 
+            options={{ 
+              title: 'Admin Home',
+              headerStyle: {
+                backgroundColor: '#B8C4FE',
+              },
+              headerTintColor: '#000000ff',
+              headerTitleStyle: {
+                fontFamily: 'Baloo2-Bold',
+              },
+              headerBackTitleStyle: {
+                fontFamily: 'Baloo2-Regular',
+              },
+            }} 
+          />
           <Stack.Screen name="AdminEventListItem" component={AdminEventListItem} />
           <Stack.Screen name="AdminEventPage" component={AdminEventPage} options={{ headerShown: false }} />
-          <Stack.Screen name="EditEvent" component={EditEvent} options={{ title: 'Edit Event Page' }} />
+          <Stack.Screen 
+            name="EditEvent" 
+            component={EditEvent} 
+            options={{ 
+              title: 'Edit Event Page',
+              headerBackTitle: 'Back',
+              headerTitleStyle: {
+                fontFamily: 'Baloo2-Bold',
+              },
+              headerBackTitleStyle: {
+                fontFamily: 'Baloo2-Regular',
+              },
+            }} 
+          />
           <Stack.Screen 
             name="TinderView" 
             component={TinderView} 
@@ -407,7 +462,16 @@ export default function App() {
           <Stack.Screen 
             name="AdminAnnouncements" 
             component={AdminAnnouncements} 
-            options={{ title: 'Admin Announcements' }} 
+            options={{ 
+              title: 'Admin Announcements',
+              headerBackTitle: 'Back',
+              headerTitleStyle: {
+                fontFamily: 'Baloo2-Bold',
+              },
+              headerBackTitleStyle: {
+                fontFamily: 'Baloo2-Regular',
+              },
+            }} 
           />
         </Stack.Navigator>
       </NavigationContainer>

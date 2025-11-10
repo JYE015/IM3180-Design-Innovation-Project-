@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#1E40AF',
+    color: '#0055FE',
     fontFamily: 'Baloo2-SemiBold',
   },
   detailRow: {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
   signupsNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#3B82F6',
+    color: '#0055FE',
     fontFamily: 'Baloo2-Bold',
   },
   attendeesContainer: {

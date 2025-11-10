@@ -330,14 +330,14 @@ export default function Calendar({ navigation }) {
     <View style={styles.container}>
       <View style={styles.scheduleHeader}>
         <Text style={styles.scheduleTitle}>CALENDAR VIEW</Text>
-        {calendarStats && (
+        {/* {calendarStats && (
           <View style={styles.statsContainer}>
             <Text style={styles.statsText}>
                This Week: {calendarStats.weekEvents}
               {currentUser && ` | My Events: ${calendarStats.userRegistrations}`}
             </Text>
           </View>
-        )}
+        )} */} 
         <View style={styles.logo}>
           <Image 
             source={require('../assets/hall1logo.png')} 
